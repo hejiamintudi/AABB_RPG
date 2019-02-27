@@ -27,7 +27,12 @@ window.tz = function (node, ...argArr) {
 	let isDebug = false;
 	// isDebug = true;
 	dylLog = function (arg) {
-		console.log("%c" + String(arg), "color:#fe8bd9;font-weight:bold;");
+		if (cc.sys.isMobile || DylIsFinal) {
+			cc.log(arg);
+		}
+		else {
+			console.log("%c" + String(arg), "color:#fe8bd9;font-weight:bold;");
+		}
 	}
 	// isDebug = true;
 	let defaultNode = null;

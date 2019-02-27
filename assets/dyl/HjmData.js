@@ -1,4 +1,13 @@
 "use strict";
+window.DylIsFinal = false; // 是否最终发布版
+// dylIsFinal = true;
+if (DylIsFinal) {
+	cc.log = function() {};
+}
+
+cc.log(cc.sys.isBrowser);
+cc.log(cc.sys.isMobile);
+cc.log(cc.sys.isNative);
 
 window.initHjmDataFun = function () {
 	_hjm("level", 0);

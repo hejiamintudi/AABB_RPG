@@ -675,6 +675,10 @@ window.initDylFun = function (cryptoJS) {
         // isLog = true;
 
         var log = function (arr1, arr2) {
+            if (cc.sys.isMobile || DylIsFinal) {
+                cc.log(arr1, arr2);
+                return null;
+            }
             if (arr1[0] === true) {
                 arr1.splice(0,1);
             }
