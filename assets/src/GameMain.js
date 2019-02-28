@@ -21,8 +21,8 @@ cc.Class({
         let arr = [
             "preCombat", 
             "preCombatAct",
-                1,  "dealCard", "myGetAllCardData", "myGetAllCardNum", "myPreTurn",  //出牌前
-                2,  "touchCard", // 触摸操作
+                1,  "dealCard", "myPreTurn",  //出牌前
+                2,  "myGetAllCardData", "myGetAllCardNum", "touchCard", // 触摸操作
                     "getPlayCard", "myGetAtkData", "myMainSkill", // 获取卡牌数据
                     "myPreAttack", "myPreAttackAct", "myHurt", "myAttack", "myEndAttackAct", "checkDie",
                     "discardBuff", "discard", "myCheckNotCard_2",
@@ -117,7 +117,7 @@ cc.Class({
     },
 
     getInitCardData (card) {
-        return {
+        let data = {
             atk: card.atk < 0 ? NaN : card.atk,
             def: card.def,
             // num: this._playCardArr.length,
@@ -131,6 +131,8 @@ cc.Class({
             playCardArr: null,
             cardType: card.type
         }
+        card.def = !!card.def;
+        return data;
     },
 
     myGetAtkData (end) {
@@ -298,15 +300,15 @@ cc.Class({
         attackRole.def += def * num;
 
         // 上面代码是有攻击防御的效果，这里的代码是根据type改变攻击防御效果 以atk为战斗力
-        if (atkData.cardType) {
-            atk = atk;
-            attackRole.def = 0;
-        }
-        else {
-            attackRole.def = atk * num;
-            atk = 0;
-        }
-        //
+        // if (atkData.cardType) {
+        //     atk = atk;
+        //     attackRole.def = 0;
+        // }
+        // else {
+        //     attackRole.def = atk * num;
+        //     atk = 0;
+        // }
+        ////////////////////////
 
         let hurtNum = atk * num - getHurtRole.def;
 
