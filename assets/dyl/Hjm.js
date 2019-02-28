@@ -1,5 +1,5 @@
 "use strict";
-// 曾棠 何嘉敏
+// 曾棠 何嘉敏 还记得我吗？
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 // cc.Class({
