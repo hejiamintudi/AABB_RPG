@@ -16,6 +16,7 @@ cc.Class({
         // 新建buffNode 显示版
         if (name[0] !== "_") {
             buffNode = role.buff.add();
+            cc.log("hjm", name, buffNode.name);
             hjm[name] = buffNode;
         }
         buff = {
@@ -49,7 +50,9 @@ cc.Class({
             buff.arrId = arr.length;
             arr.push(buff);
             tab[name] = buff;
-            buff.num += num;
+            buff.num = num;
+            // buff.buffNode.num = num;
+            dyl.set(buff.buffNode, "num", buff.num);
             buff.isDel = false; 
             return buff;
         }
@@ -63,6 +66,7 @@ cc.Class({
         // 减少buff的num。 小于等于0 就直接zero
         arr.sub = function (end, buff, num = 1) {
             buff.num -= num;
+            dyl.set(buff.buffNode, "num", buff.num);
             if (buff.num <= 0) {
                 return this.zero(end, buff);
             }
@@ -77,6 +81,10 @@ cc.Class({
 
         arr.keep = function (end) {
             end();
+        }
+
+        arr.endTurn = function (end) {
+            end(); // 这里不处理，但会在回合结束的时候删了相关内容
         }
 
         // 这只是更新位置
@@ -119,6 +127,14 @@ cc.Class({
                 // buff.fun(endFun, atkData, buff, role);
             }
         }
+        if (buffStateName === "endTurn") {
+            for (let i = 0; i < buffArr.length; i++) {
+                let buff = buffArr[i];
+                if (buff.delFun === "endTurn") {
+                    buffArr.del(buff);
+                }
+            }
+        }
         end(buffArr, "resetBuff");
     },
 
@@ -151,11 +167,22 @@ cc.Class({
         };
     },
 
-    //永久攻击增加，对于敌人来说，都是1：1的增加，但英雄是几倍增加
-    atk (roleNode, num = 1) {
-        let buff = roleNode.buffArr.add("atk", num);
+    // //永久攻击增加，对于敌人来说，都是1：1的增加，但英雄是几倍增加
+    // atk (roleNode, num = 1) {
+    //     let buff = roleNode.buffArr.add("atk", num);
+    //     buff.state = "preAttack";
+    //     buff.delFun = "keep";
+
+    //     buff.fun = (end, atkData, buff, role)=>{
+    //         atkData.atk += buff.num;
+    //         end();
+    //     };
+    // },
+
+    liliang (roleNode, num = 1) {
+        let buff = roleNode.buffArr.add("liliang", num);
         buff.state = "preAttack";
-        buff.delFun = "keep";
+        buff.delFun = "endTurn";
 
         buff.fun = (end, atkData, buff, role)=>{
             atkData.atk += buff.num;

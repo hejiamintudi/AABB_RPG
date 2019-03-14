@@ -56,7 +56,7 @@ cc.Class({
 
     // addBuff ()
 //返回攻击数据对象 [atk, def, [meBuff], [enBuff]]
-    polarBear (en, round) {
+    en1 (en, round) {
     	if (round === 0) {
     		return [0, 0, ["ritual"]];
     	}

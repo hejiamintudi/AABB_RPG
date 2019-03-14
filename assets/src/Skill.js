@@ -26,12 +26,13 @@ cc.Class({
 
     // 这个是测试技能 skillNum 都是3
     testMain (end, atkData) {
-        return this.forget(end, atkData);
+        // return this.forget(end, atkData);
+        return this.atk3(end, atkData);
     },
 
     // 加3点攻击力
     atk3 (end, atkData) {
-        atkData.myBuff.push(["atk", 3]);
+        atkData.myBuff.push(["liliang", 3]);
         end();
     },
 

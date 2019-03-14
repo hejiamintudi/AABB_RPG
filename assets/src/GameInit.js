@@ -12,14 +12,14 @@ cc.Class({
         //     return newValue;
         // })
     	this.cardNameArr = [
-    						"duanjian", 
-							"qingdun",
-                            "duanjian", 
-                            "qingdun",
-                            "duanjian", 
-                            "qingdun",
-                            "duanjian", 
-                            "qingdun"
+    						"jian", 
+							"dun",
+                            "jian", 
+                            "jian",
+                            "jian", 
+                            "dun",
+                            "dun", 
+                            "dun"
 		];
 
 		// this.enNameArr = [
@@ -27,7 +27,7 @@ cc.Class({
 		// 					"shayu"
 		// ];
 
-        this.enName = "polarBear";
+        this.enName = "en1";
 
         this.relicArr = [ // 遗物
                             "ring",
@@ -57,14 +57,79 @@ cc.Class({
 
         hjm._en.name = this.enName;
 
-        let arr = ["addEn", "addCardArr", "startGame"];
+        let arr = ["addHero", "addEn", "addCardArr", "startGame"];
         dyl.process(this, arr);
     },
 
+    playAttack () {
+        hjm._en.en.getComponent(cc.Animation).play("attack");
+    },
+
+    addHero (end) {
+        let frames = [];
+        this.frames = frames;
+        cc.loader.loadRes("hero", cc.SpriteAtlas, function (err, atlas) {
+            // var frame = atlas.getSpriteFrame('sheep_down_0');
+            // sprite.spriteFrame = frame;
+            let tmpFrames = atlas.getSpriteFrames();
+            let len = tmpFrames.length;
+            for (let i = 0; i < len; i++) {
+                frames.push(atlas.getSpriteFrame(String(i)));
+            }
+            hjm._hero.en.getComponent(cc.Sprite).spriteFrame = frames[0];
+
+            let animation = hjm._hero.en.getComponent(cc.Animation);
+            // hjm._en.en.setScale(-1.5, 1.5);
+            // frames 这是一个 SpriteFrame 的数组.
+            let clip = cc.AnimationClip.createWithSpriteFrames(frames, 30);
+            clip.name = "attack";
+            // clip.wrapMode = cc.WrapMode.Loop;
+
+            // // 添加帧事件
+            // clip.events.push({
+            //     frame: 1,               // 准确的时间，以秒为单位。这里表示将在动画播放到 1s 时触发事件
+            //     func: "frameEvent",     // 回调函数名称
+            //     params: [1, "hello"]    // 回调参数
+            // });
+
+            animation.addClip(clip);
+            // animation.play("idle");
+            end();
+        }); 
+    },
+
     addEn (end) {
-        // cc.log(this.enName, hjm._en.en);
-        hjm[this.enName] = hjm._en.en;
-        end();
+        // hjm[this.enName] = hjm._en.en;
+        let frames = [];
+        this.frames = frames;
+        cc.loader.loadRes("en/" + this.enName + "/attack", cc.SpriteAtlas, function (err, atlas) {
+            // var frame = atlas.getSpriteFrame('sheep_down_0');
+            // sprite.spriteFrame = frame;
+            let tmpFrames = atlas.getSpriteFrames();
+            let len = tmpFrames.length;
+            for (let i = 0; i < len; i++) {
+                frames.push(atlas.getSpriteFrame(String(i)));
+            }
+            hjm._en.en.getComponent(cc.Sprite).spriteFrame = frames[0];
+
+            let animation = hjm._en.en.getComponent(cc.Animation);
+            // hjm._en.en.setScale(-1.5, 1.5);
+            // frames 这是一个 SpriteFrame 的数组.
+            let clip = cc.AnimationClip.createWithSpriteFrames(frames, 30);
+            clip.name = "attack";
+            // clip.wrapMode = cc.WrapMode.Loop;
+
+            // // 添加帧事件
+            // clip.events.push({
+            //     frame: 1,               // 准确的时间，以秒为单位。这里表示将在动画播放到 1s 时触发事件
+            //     func: "frameEvent",     // 回调函数名称
+            //     params: [1, "hello"]    // 回调参数
+            // });
+
+            animation.addClip(clip);
+            // animation.play("idle");
+            end();
+        });         
     },
 
     // addEnArr (end) {
@@ -108,7 +173,11 @@ cc.Class({
         card.x = 2000;
         this.setCardTypeFun(card);
         let {mainSkill, friendSkill} = dyl.data("card." + card.cardName, card);
-        card.atk = card.atk >= 0;
+
+        // atk 改为不显示
+        // card.atk = card.atk >= 0;
+        card.atk = false;
+
         let Skill = this.node.getComponent("Skill");
         Skill.addMainSkill(card, mainSkill);
         Skill.addFriendSkill(card, friendSkill);
@@ -117,11 +186,11 @@ cc.Class({
     setCardTypeFun (card) {
         let fun = (type)=>{
             if (type === 0) {
-                card.cardColor = cc.color(204, 51, 51);
+                // card.cardColor = cc.color(204, 51, 51);
                 card.cardBg = false;
             }
             else if (type === 1) {
-                card.cardColor = cc.color(51, 153, 255);
+                // card.cardColor = cc.color(51, 153, 255);
                 card.cardBg = true;
             }
             else {

@@ -46,6 +46,7 @@ cc.Class({
         for (let i = 0; i < nodeArr.length; i++) {
             nodeArr[i].parent = this.node.parent;
         }
+        let nowNodePos = cc.v2(this.node);
         this.node.setPosition(cc.v2(0, 0));
         // this.logPath(this.node);
         let newNode = cc.instantiate(this.node);
@@ -55,6 +56,7 @@ cc.Class({
 
         // cc.log("newNode", newNode.getComponent("DylPool")); 
         newNode.parent = this.node;
+        newNode.dylSpriteNodeName = newNode.name; // 先保存之前的，方便动态加载图片
         newNode.name = "tmp";
         // newNode.setPosition(cc.v2(0, 0));
         // cc.kk = newNode;
@@ -72,6 +74,8 @@ cc.Class({
             nodeArr[i].parent = newNode;
         }
         newNode.setPosition(this.node);
+
+        this.node.setPosition(nowNodePos);
         // top.parent = this.node;
     },
 

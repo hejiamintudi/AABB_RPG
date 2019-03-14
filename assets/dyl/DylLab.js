@@ -204,10 +204,10 @@ cc.Class({
                     return;
                 }
                 else if (cc.js.getClassName(data) === "cc.Vec2") {
-                    if (typeof data.x !== "number") {
+                    if (isNaN(data.x)) {
                         data.x = dataArr[0].x;
                     }
-                    if (typeof data.y !== "number") {
+                    if (isNaN(data.y)) {
                         data.y = dataArr[0].y;
                     }
                     let p = data.sub(dataArr[0]); // 偏移量

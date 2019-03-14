@@ -39,7 +39,8 @@ cc.Class({
         // let arr = [
         //     "preCombat", "runGame"//, "addCardArr", "startGame"
         // ];
-        dyl.process(this, arr, true);
+        dyl.process(this, arr);
+        // dyl.process(this, arr, true);
     },
 
     preCombatAct (end) {
@@ -131,7 +132,7 @@ cc.Class({
             playCardArr: null,
             cardType: card.type
         }
-        card.def = !!card.def;
+        // card.def = !!card.def; // 设置def是否显示
         return data;
     },
 
@@ -348,6 +349,8 @@ cc.Class({
 
     // 攻击前特效, 攻击角色向前动一下
     attackPreAct (end, attackRole, getHurtRole) {
+        attackRole.en.getComponent(cc.Animation).play("attack");
+
         let dir = attackRole.type;
 
         let atkMoveP = cc.v2(100 * dir, 0); // 攻击移动的距离
@@ -662,6 +665,8 @@ cc.Class({
     },
 
     showCardData () {
+        let playColor = cc.color(233, 129, 4);
+        let stopColor = cc.color(110, 110, 110);
         let id = this._playCardId;
         let card = ai.hand[id];
         if (!card) {
@@ -675,19 +680,46 @@ cc.Class({
 
         // hjm[card.cardName] = showNode.card;
         this.copySpr(showNode.card, card.card);
-        showNode.card = (cardType === 0) ? cc.color(204, 51, 51) : cc.color(51, 153, 255);
+        // showNode.card = (cardType === 0) ? cc.color(204, 51, 51) : cc.color(51, 153, 255);
         
         showNode.cardBg = (cardType === 1);
 
         showNode.power = card.atkData.num;
 
         let data = dyl.data("card." + card.cardName, showNode);
+        // cc.log("showNode atk", showNode.atk);
+        // if (showNode.atk < 0) {
+        // showNode.Atk = showNode.atk > 0; 
+        if (showNode.atk > 0) {
+            showNode.atkLab = playColor;
+            showNode.atk = true;
+        }
+        else {
+            showNode.atkLab = stopColor;
+            showNode.atk = false;
+        }
+
+        if (showNode.def > 0) {
+            showNode.defLab = playColor;
+            showNode.def = true;
+        }
+        else {
+            showNode.defLab = stopColor;
+            showNode.def = false;
+        }
+
+        if (showNode.skillNum <= showNode.power) {
+            showNode.mainSkillLab = playColor;
+        }
+        else {
+            showNode.mainSkillLab = stopColor;
+        }
 
         let y = 0;
         let d = 230;
         if (data.mainSkill) {
             showNode.mainSkill = true;
-            showNode.mainSkill = cc.v2(true, y);
+            showNode.mainSkill = cc.v2(NaN, y);
             y -= d;
         }
         else {
@@ -697,7 +729,7 @@ cc.Class({
 
         if (data.friendSkill) {
             showNode.friendSkill = true;
-            showNode.friendSkill = cc.v2(true, y);
+            showNode.friendSkill = cc.v2(NaN, y);
             y -= d;
         }
         else {
