@@ -153,7 +153,7 @@ cc.Class({
             this._dylLabel.string = str;
             this._dylLabel._dylSayId++;
         }
-        node.change = function (oldData, newData) {
+        node.change = function (newData, oldData) {
             
         }
 
@@ -272,11 +272,11 @@ cc.Class({
                 for (let i = 0; i < dataArr.length; i++) {
                     let node = dataArr[i];
                     if (typeof node.change === "function") {
-                        node.change(oldData, data);
+                        node.change(data, oldData);
                     }
                 }
                 if (typeof dataArr.notify === "function") {
-                    dataArr.notify(oldData, data);
+                    dataArr.notify(data, oldData);
                 }
             }
         })

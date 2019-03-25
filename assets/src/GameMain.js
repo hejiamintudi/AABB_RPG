@@ -24,8 +24,10 @@ cc.Class({
                 1,  "dealCard", "myPreTurn",  //出牌前
                 2,  "myGetAllCardData", "myGetAllCardNum", "touchCard", // 触摸操作
                     "getPlayCard", "myGetAtkData", "myMainSkill", // 获取卡牌数据
-                    "myPreAttack", "myPreAttackAct", "myHurt", "myAttack", "myEndAttackAct", "checkDie",
-                    "discardBuff", "discard", "myCheckNotCard_2",
+                    "myPreAttack", "myAddMainDmg", "myPreAttackAct", 
+                    3, "myAttack_3", 
+                        "myEndAttack", "myResetHurtAct", "checkDie",
+                        "discardBuff", "discard", "myCheckNotCard_2",
                 "myEndTurn", // 我方结束回合后 
 
                 "enGetAtkData", 
@@ -39,8 +41,8 @@ cc.Class({
         // let arr = [
         //     "preCombat", "runGame"//, "addCardArr", "startGame"
         // ];
-        dyl.process(this, arr);
-        // dyl.process(this, arr, true);
+        // dyl.process(this, arr);
+        dyl.process(this, arr, true);
     },
 
     preCombatAct (end) {
@@ -130,7 +132,9 @@ cc.Class({
             enBuff: [],
             // playCardArr: this._playCardArr,
             playCardArr: null,
-            cardType: card.type
+            cardType: card.type,
+
+            dmgArr: [] // 记录不同伤害的数组
         }
         // card.def = !!card.def; // 设置def是否显示
         return data;
@@ -197,6 +201,32 @@ cc.Class({
         return this.attackPreAct(end, hjm._hero, hjm._en);
     },
 
+    myAddMainDmg (end) {
+        let atkData = hjm._hero.atkData;
+        let data = {
+            atk: atkData.num * atkData.atk,
+            def: atkData.num * atkData.def,
+            name: "main",  //
+            type: "ad",
+            myBuff: atkData.myBuff,
+            enBuff: atkData.enBuff
+
+        };
+        // atkData.dmgArr = [data, ...atkData.dmgArr];
+        atkData.dmgArr.push(data);
+        let dmgArr = atkData.dmgArr;
+        atkData.isAtk = false;
+
+        // 改为实时监测
+        // for (var i = dmgArr.length - 1; i >= 0; i--) {
+        //     if (!isNaN(dmgArr[i].num)) {
+        //         atkData.isAtk = true;
+        //         break;
+        //     }
+        // }
+        end();
+    },
+
     enPreAttackAct (end) {
         return this.attackPreAct(end, hjm._en, hjm._hero);
     },
@@ -209,8 +239,17 @@ cc.Class({
         return this.hurt(end, hjm._en, hjm._hero);
     },
 
-    myAttack (end) {
-        return this.attack(end, hjm._hero, hjm._en);
+    myAttack_3 (end) {
+        return this.attack(end, hjm._hero, hjm._en, 3);
+    },
+
+    myEndAttack (end) {
+        return this.endAttack(end);
+    },
+
+    endAttack (end) {
+        this.runBuffArr(end, hjm._hero, "endAttack", hjm._hero.atkData);
+        end();
     },
 
     enAttack (end) {
@@ -290,39 +329,23 @@ cc.Class({
         end();
     },
 
-    // 获取受伤数值，受伤
-    // 直接给双方加buff
-    attack (end, attackRole, getHurtRole) {
-        let atkData = attackRole.atkData;
-        let {atk, def, num, myBuff, enBuff} = atkData;
-        if (isNaN(atk)) { // 如果是非攻击卡，那就没有攻击效果
-            atk = 0;
+    // 作用完buff后，直接攻击
+    oneAttack (end, attackRole, getHurtRole, dmgData) {
+        let {atk, name, myBuff, enBuff, def} = dmgData;
+        // cc.log("myBuff", )
+        // 数值处理
+        attackRole.def += def;
+        if (getHurtRole.def > atk) { // 护甲足够，不用扣血
+            getHurtRole.def -= atk;
         }
-        attackRole.def += def * num;
-
-        // 上面代码是有攻击防御的效果，这里的代码是根据type改变攻击防御效果 以atk为战斗力
-        // if (atkData.cardType) {
-        //     atk = atk;
-        //     attackRole.def = 0;
-        // }
-        // else {
-        //     attackRole.def = atk * num;
-        //     atk = 0;
-        // }
-        ////////////////////////
-
-        let hurtNum = atk * num - getHurtRole.def;
-
-        atkData.hurtNum = hurtNum > 0 ? hurtNum : 0;
-
-        if (hurtNum >= 0) {
+        else { // 扣血，扣护甲
+            attackRole.atkData.isAtk = true;
+            getHurtRole.hp = getHurtRole.hp - atk + getHurtRole.def;
             getHurtRole.def = 0;
-            getHurtRole.hp -= hurtNum;
-        }
-        else {
-            getHurtRole.def = -hurtNum;
+            this.getHurtAct(attackRole, getHurtRole);
         }
 
+        // buff处理
         let Buff = this.node.getComponent("Buff");
         for (let i = 0; i < myBuff.length; i++) {
             // end(Buff, myBuff[i], attackRole, 1);
@@ -344,8 +367,121 @@ cc.Class({
             }
             // Buff[enBuff[i]](getHurtRole);
         }
-        end();
+
+        // 特效处理
+        if (isNaN(atk)) { // 非攻击状态
+            if (hjm._buff[name]) {
+                hjm._buff[name].add(cc.v2(getHurtRole), atk);
+            }
+            else {
+                hjm._buff.defaultDef.add(cc.v2(getHurtRole), atk);
+            }
+
+        }
+        else {             
+            if (hjm._buff[name]) {
+                hjm._buff[name].add(cc.v2(getHurtRole), atk);
+            }
+            else {
+                hjm._buff.defaultAtk.add(cc.v2(getHurtRole), atk);
+            }
+        }
+        // end();
+
+        // 延时处理
+        tz(0.1, end)();
     },
+
+    // runBuffArr (end, role, buffStateName, atkData, ...argArr)
+    // readNum 是读档数字
+    attack (end, attackRole, getHurtRole, readNum) {
+        let atkData = attackRole.atkData;
+        let dmgArr = atkData.dmgArr;
+        if (dmgArr.length === 0) {
+            end();
+        }
+        let dmgData = dmgArr.pop();
+        if (isNaN(dmgData.atk)) {
+            dmgData.atk = 0;
+        }
+        this.runBuffArr(end, attackRole, "attack", atkData, dmgData);
+        this.runBuffArr(end, getHurtRole, "hurt", atkData, dmgData);
+        end(this, "oneAttack", attackRole, getHurtRole, dmgData);
+        end(readNum);
+
+        // let atkData = attackRole.atkData;
+        // let dmgArr = atkData.dmgArr;
+        // // oneAttack (end, dmgData, attackRole, getHurtRole)
+        // if (dmgArr.length === 0) {
+        //     end();
+        // }
+        // else {
+
+        // }
+        // for (let i = 0; i < dmgArr.length; i++) {
+        //     end(this, "runBuffArr", getHurtRole, "hurt", atkData, dmgArr[i]);
+        //     end(this, "oneAttack", dmgArr[i], attackRole, getHurtRole);
+        // }
+
+        // end();
+    },
+
+    // // 获取受伤数值，受伤
+    // // 直接给双方加buff
+    // attack (end, attackRole, getHurtRole) {
+    //     let atkData = attackRole.atkData;
+    //     let {atk, def, num, myBuff, enBuff} = atkData;
+    //     if (isNaN(atk)) { // 如果是非攻击卡，那就没有攻击效果
+    //         atk = 0;
+    //     }
+    //     attackRole.def += def * num;
+
+    //     // 上面代码是有攻击防御的效果，这里的代码是根据type改变攻击防御效果 以atk为战斗力
+    //     // if (atkData.cardType) {
+    //     //     atk = atk;
+    //     //     attackRole.def = 0;
+    //     // }
+    //     // else {
+    //     //     attackRole.def = atk * num;
+    //     //     atk = 0;
+    //     // }
+    //     ////////////////////////
+
+    //     let hurtNum = atk * num - getHurtRole.def;
+
+    //     atkData.hurtNum = hurtNum > 0 ? hurtNum : 0;
+
+    //     if (hurtNum >= 0) {
+    //         getHurtRole.def = 0;
+    //         getHurtRole.hp -= hurtNum;
+    //     }
+    //     else {
+    //         getHurtRole.def = -hurtNum;
+    //     }
+
+    //     let Buff = this.node.getComponent("Buff");
+    //     for (let i = 0; i < myBuff.length; i++) {
+    //         // end(Buff, myBuff[i], attackRole, 1);
+    //         if (typeof myBuff[i] === "string") {
+    //             Buff[myBuff[i]](attackRole);
+    //         }
+    //         else {
+    //             let [buffName, buffNum] = myBuff[i];
+    //             Buff[buffName](attackRole, buffNum);   
+    //         }
+    //     }
+    //     for (let i = 0; i < enBuff.length; i++) {
+    //         if (typeof enBuff[i] === "string") {
+    //             Buff[enBuff[i]](getHurtRole);
+    //         }
+    //         else {
+    //             let [buffName, buffNum] = enBuff[i];
+    //             Buff[buffName](getHurtRole, buffNum);   
+    //         }
+    //         // Buff[enBuff[i]](getHurtRole);
+    //     }
+    //     end();
+    // },
 
     // 攻击前特效, 攻击角色向前动一下
     attackPreAct (end, attackRole, getHurtRole) {
@@ -360,6 +496,67 @@ cc.Class({
             .moveBy(atkMoveTime, atkMoveP)
              (end)();
 
+    },
+
+    myGetHurtAct (end) {
+        return this.getHurtAct(end, hjm._hero, hjm._en);
+    },
+
+    myResetHurtAct (end) {
+        return this.resetHurtAct(end, hjm._hero, hjm._en);
+    },
+
+    resetHurtAct (end, attackRole, getHurtRole) {
+        // if (attackRole.atkData.isAtk) {
+        //     // getHurtRole.en.subRed();
+        //     getHurtRole.en.setPosition(cc.v2(0, 0));
+        //     getHurtRole.en.rotation = 0;
+        // }
+        let recoverTime = 0.2;
+        attackRole.resetSpr();
+        if (attackRole.atkData.isAtk) {
+            getHurtRole.tz(false);
+            getHurtRole.tz = tz(getHurtRole)
+                                ._moveTo(recoverTime, getHurtRole.oriPos)
+                                  .rotateTo(recoverTime, 0)
+                                  .moveTo(attackRole, recoverTime, attackRole.oriPos)
+                                ._rotateTo(attackRole, recoverTime, 0)
+                                (end)();
+            return;
+        }
+        tz(attackRole)
+            ._moveTo(recoverTime, attackRole.oriPos)
+            ._rotateTo(recoverTime, 0)
+            (end)();
+    },
+
+    getHurtAct (attackRole, getHurtRole) {
+        let dir = attackRole.type;
+        let backTime = 0.1;
+        dyl.shake(hjm._bg, backTime);
+        getHurtRole.en.oneRed();
+        getHurtRole.tz(false);
+
+        getHurtRole.setPosition(getHurtRole.oriPos);
+        getHurtRole.rotation = 0;
+
+        getHurtRole.tz = tz(getHurtRole)
+            ._moveBy(backTime, cc.v2(80 * dir, 0))
+            ._rotateTo(backTime, 15 * dir)
+            ();
+
+        // let isAtk = attackRole.atkData.isAtk;
+        // let dir = attackRole.type;
+        
+        // let recoverP = cc.v2(-100 * dir, 0); // 恢复动作的位移
+
+        // if (isAtk) {
+        //     getHurtRole.en.addRed();
+        //     dyl.shake(hjm._bg, 0.2);
+        //     getHurtRole.en.setPosition(cc.v2(80 * dir, 0));
+        //     getHurtRole.en.rotation = 15 * dir;
+        // }
+        // end();
     },
 
     attackEndAct (end, attackRole, getHurtRole) {
@@ -381,7 +578,7 @@ cc.Class({
             }
             getHurtRole.en.addRed();
 
-            hjm._eff.add(getHurtRole, -attackRole.atkData.hurtNum);
+            hjm._eff.add(getHurtRole, -attackRole.atkData.hurtNum); // 待定
             dyl.shake(hjm._bg, 0.2);
             tz(getHurtRole)
                 ._moveBy(0.1, cc.v2(80 * dir, 0))
@@ -505,9 +702,9 @@ cc.Class({
         end();
     },
 
-    runBuffArr (end, role, buffStateName, atkData) {
+    runBuffArr (end, role, buffStateName, atkData, ...argArr) {
         let Buff = this.node.getComponent("Buff");
-        Buff.runBuffArr(end, role, buffStateName, atkData);
+        Buff.runBuffArr(end, role, buffStateName, atkData, ...argArr);
 
         // let buffArr = role[buffStateName];
         // for (let i = 0; i < buffArr.length; i++) {

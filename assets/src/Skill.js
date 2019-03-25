@@ -33,6 +33,7 @@ cc.Class({
     // 加3点攻击力
     atk3 (end, atkData) {
         atkData.myBuff.push(["liliang", 3]);
+        // atkData.enBuff.push(["yishang", 3]);
         end();
     },
 

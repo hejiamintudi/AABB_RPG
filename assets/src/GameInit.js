@@ -37,7 +37,15 @@ cc.Class({
         hjm._hero.type = 1;
         hjm._hero.hp = "030";
         hjm._en.hp = "030";
-        hjm._hero.def = (oldValue, newValue)=>{
+
+        hjm._en.oriPos = cc.v2(hjm._en);
+        hjm._hero.oriPos = cc.v2(hjm._hero);
+
+        // 开始时，没有动作
+        hjm._hero.tz = ()=>null;
+        hjm._en.tz = ()=>null;
+
+        hjm._hero.def = (newValue, oldValue)=>{
             if (newValue <= 0) {
                 hjm._hero.def = false;
             }
@@ -46,7 +54,7 @@ cc.Class({
             }
         }
 
-        hjm._en.def = (oldValue, newValue)=>{
+        hjm._en.def = (newValue, oldValue)=>{
             if (newValue <= 0) {
                 hjm._en.def = false;
             }
@@ -55,7 +63,7 @@ cc.Class({
             }
         }
 
-        hjm._en.name = this.enName;
+        hjm._en.enName = this.enName; 
 
         let arr = ["addHero", "addEn", "addCardArr", "startGame"];
         dyl.process(this, arr);
@@ -76,7 +84,12 @@ cc.Class({
             for (let i = 0; i < len; i++) {
                 frames.push(atlas.getSpriteFrame(String(i)));
             }
-            hjm._hero.en.getComponent(cc.Sprite).spriteFrame = frames[0];
+            let heroSprite = hjm._hero.en.getComponent(cc.Sprite);
+            heroSprite.spriteFrame = frames[0];
+            // hjm._hero.en.oriSpriteFrame = frames[0];
+            hjm._hero.resetSpr = function () {
+                heroSprite.spriteFrame = frames[0];
+            }
 
             let animation = hjm._hero.en.getComponent(cc.Animation);
             // hjm._en.en.setScale(-1.5, 1.5);
@@ -105,12 +118,22 @@ cc.Class({
         cc.loader.loadRes("en/" + this.enName + "/attack", cc.SpriteAtlas, function (err, atlas) {
             // var frame = atlas.getSpriteFrame('sheep_down_0');
             // sprite.spriteFrame = frame;
+            if (err) {
+                cc.error(err);
+            }
+
             let tmpFrames = atlas.getSpriteFrames();
             let len = tmpFrames.length;
             for (let i = 0; i < len; i++) {
                 frames.push(atlas.getSpriteFrame(String(i)));
             }
-            hjm._en.en.getComponent(cc.Sprite).spriteFrame = frames[0];
+            // dyl.sprs = frames;
+            let enSprite = hjm._en.en.getComponent(cc.Sprite);
+            enSprite.spriteFrame = frames[0];
+
+            hjm._en.resetSpr = function () {
+                enSprite.spriteFrame = frames[0];
+            }
 
             let animation = hjm._en.en.getComponent(cc.Animation);
             // hjm._en.en.setScale(-1.5, 1.5);

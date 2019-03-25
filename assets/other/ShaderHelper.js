@@ -36,20 +36,48 @@ let ShaderHelper = cc.Class({
 
         let id = 0;
         let isRed = false;
-        this.node.addRed = ()=>{
-            let tmpId = ++id;
-            if (!isRed) {
-                this.isRed = true;
-                this.applyShader();
+
+        let redNum = 0; //
+        let add = ()=>{
+            redNum++;
+            if (redNum > 1) {
+                return;
             }
-            setTimeout(()=>{
-                if (tmpId !== id || !cc.isValid(this.node)) {
-                    return;
-                }
+            isRed = true;
+            this.applyShader();
+        }
+        let sub = ()=>{
+            redNum--;
+            if (redNum === 0) {
                 isRed = false;
                 this.sprite.setState(cc.Sprite.State.NORMAL);
+            }
+        }
+        this.node.oneRed = ()=>{
+            add();
+            setTimeout(()=>{
+                if (!cc.isValid(this.node)) {
+                    return;
+                }
+                sub();
             }, t * 1000);
         }
+        this.node.addRed = ()=>add();
+        this.node.subRed = ()=>sub();
+        // this.node.addRed = ()=>{
+        //     let tmpId = ++id;
+        //     if (!isRed) {
+        //         this.isRed = true;
+        //         this.applyShader();
+        //     }
+        //     setTimeout(()=>{
+        //         if (tmpId !== id || !cc.isValid(this.node)) {
+        //             return;
+        //         }
+        //         isRed = false;
+        //         this.sprite.setState(cc.Sprite.State.NORMAL);
+        //     }, t * 1000);
+        // }
     },
 
     update(dt) {

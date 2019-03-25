@@ -34,36 +34,6 @@
                 <key>textureRotated</key>
                 <false/>
             </dict>
-            <key>10.png</key>
-            <dict>
-                <key>aliases</key>
-                <array/>
-                <key>spriteOffset</key>
-                <string>{0,0}</string>
-                <key>spriteSize</key>
-                <string>{415,553}</string>
-                <key>spriteSourceSize</key>
-                <string>{415,553}</string>
-                <key>textureRect</key>
-                <string>{{830,1106},{415,553}}</string>
-                <key>textureRotated</key>
-                <false/>
-            </dict>
-            <key>11.png</key>
-            <dict>
-                <key>aliases</key>
-                <array/>
-                <key>spriteOffset</key>
-                <string>{0,0}</string>
-                <key>spriteSize</key>
-                <string>{415,553}</string>
-                <key>spriteSourceSize</key>
-                <string>{415,553}</string>
-                <key>textureRect</key>
-                <string>{{1245,1106},{415,553}}</string>
-                <key>textureRotated</key>
-                <false/>
-            </dict>
             <key>2.png</key>
             <dict>
                 <key>aliases</key>
@@ -198,7 +168,7 @@
             <key>size</key>
             <string>{1660,1659}</string>
             <key>smartupdate</key>
-            <string>$TexturePacker:SmartUpdate:428085fe64eb80f7e6c1b0d516ae115c:3cc5a23863d3213ef9aba5680ccb375c:e44e28a7f983377b8bb0c97d886e5bb7$</string>
+            <string>$TexturePacker:SmartUpdate:32f549c8aba43e5d1416f24ab20141e6:f943a94d1d7ff21cf3cd11b221937231:e44e28a7f983377b8bb0c97d886e5bb7$</string>
             <key>textureFileName</key>
             <string>hero.png</string>
         </dict>

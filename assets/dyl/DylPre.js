@@ -1039,23 +1039,23 @@ window.initDylFun = function (cryptoJS) {
         }
     };
 
-    //100 * 100  的物体 dyl.shake(2, 5, 5, hjm._tz);
-    dyl.shake = function (time, w, h, node) {
-        var x = dyl.rand() * 50 + 30;
-        var y = dyl.rand() * 50 + 30;
-        cc.log(x, y);
-        var t = 0;
-        var fun = function fun(dt) {
-            node.setPosition(w * Math.sin(x * t), h * Math.sin(y * t));
-            t += dt;
-            if (t >= time) {
-                node.setPosition(0, 0);
-                return false;
-            }
-            return true;
-        };
-        dyl.update(fun);
-    };
+    // //100 * 100  的物体 dyl.shake(2, 5, 5, hjm._tz);
+    // dyl.shake = function (time, w, h, node) {
+    //     var x = dyl.rand() * 50 + 30;
+    //     var y = dyl.rand() * 50 + 30;
+    //     cc.log(x, y);
+    //     var t = 0;
+    //     var fun = function fun(dt) {
+    //         node.setPosition(w * Math.sin(x * t), h * Math.sin(y * t));
+    //         t += dt;
+    //         if (t >= time) {
+    //             node.setPosition(0, 0);
+    //             return false;
+    //         }
+    //         return true;
+    //     };
+    //     dyl.update(fun);
+    // };
 
     //这是操作缓冲类，主要处理那种，上一个动作还没有做完，就出现下一个输入的情况。这时候可以把这个输入保存，等做完动作再运行
     dyl.buffer = function (actFun, time) {

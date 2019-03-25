@@ -7,7 +7,7 @@ cc.Class({
     },
 
     addSkill (en, round) {
-        let enName = en.name;
+        let enName = en.enName;
     	let dataArr = this[enName](en, round);
     	let atkData = { //攻击数据
     		atk: dataArr[0],
@@ -58,6 +58,13 @@ cc.Class({
 //返回攻击数据对象 [atk, def, [meBuff], [enBuff]]
     en1 (en, round) {
     	if (round === 0) {
+            let dmgData = {
+                num: NaN,
+                def: 0,
+                myBuff: [],
+                enBuff: [],
+                plan: ""
+            }
     		return [0, 0, ["ritual"]];
     	}
     	else {
