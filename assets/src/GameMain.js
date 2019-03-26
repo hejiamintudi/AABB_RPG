@@ -31,7 +31,9 @@ cc.Class({
                 "myEndTurn", // 我方结束回合后 
 
                 "enGetAtkData", 
-                "enPreAttack", "enPreAttackAct", "enHurt", "enAttack", "enEndAttackAct", "checkDie",
+                "enPreAttack", "enAddMainDmg", "enPreAttackAct", 
+                    4, "enAttack_4", 
+                        "enEndAttack", "enResetHurtAct", "checkDie",
                 "enEndTurn",  
                 -1
         ];
@@ -123,6 +125,7 @@ cc.Class({
         let data = {
             atk: card.atk < 0 ? NaN : card.atk,
             def: card.def,
+            times : card.times,
             // num: this._playCardArr.length,
             num: 0, // num = friend所有的friendNum + 自身mainNum
             friendNum: 1, // 默认为 1
@@ -158,7 +161,8 @@ cc.Class({
 
     enGetAtkData (end) {
         let EnSkill = this.node.getComponent("EnSkill");
-        hjm._en.atkData = EnSkill.addSkill(hjm._en, this.round);
+        let data = EnSkill.addSkill(hjm._en, this.round);
+        hjm._en.atkData = data;
         end();
     },
 
@@ -203,17 +207,19 @@ cc.Class({
 
     myAddMainDmg (end) {
         let atkData = hjm._hero.atkData;
-        let data = {
-            atk: atkData.num * atkData.atk,
-            def: atkData.num * atkData.def,
-            name: "main",  //
-            type: "ad",
-            myBuff: atkData.myBuff,
-            enBuff: atkData.enBuff
-
-        };
         // atkData.dmgArr = [data, ...atkData.dmgArr];
-        atkData.dmgArr.push(data);
+        for (let i = 0; i < atkData.times; i++) {
+            let data = {
+                atk: atkData.num * atkData.atk,
+                def: atkData.num * atkData.def,
+                name: "main",  //
+                type: "ad",
+                myBuff: atkData.myBuff,
+                enBuff: atkData.enBuff
+
+            };
+            atkData.dmgArr.push(data);
+        }
         let dmgArr = atkData.dmgArr;
         atkData.isAtk = false;
 
@@ -224,6 +230,24 @@ cc.Class({
         //         break;
         //     }
         // }
+        end();
+    },
+
+    enAddMainDmg (end) {
+        let atkData = hjm._en.atkData;
+        atkData.dmgArr = [];
+        for (let i = 0; i < atkData.times; i++) {
+            let data = {
+                atk: atkData.atk,
+                def: atkData.def,
+                name: "main",
+                type: "ad",
+                myBuff: atkData.myBuff,
+                enBuff: atkData.enBuff
+            };
+            atkData.dmgArr.push(data);
+        }
+        atkData.isAtk = false;
         end();
     },
 
@@ -247,13 +271,17 @@ cc.Class({
         return this.endAttack(end);
     },
 
+    enEndAttack (end) {
+        return this.endAttack(end);
+    },
+
     endAttack (end) {
         this.runBuffArr(end, hjm._hero, "endAttack", hjm._hero.atkData);
         end();
     },
 
-    enAttack (end) {
-        return this.attack(end, hjm._en, hjm._hero);
+    enAttack_4 (end) {
+        return this.attack(end, hjm._en, hjm._hero, 4);
     },
 
     myEndAttackAct (end) {
@@ -398,7 +426,8 @@ cc.Class({
         let atkData = attackRole.atkData;
         let dmgArr = atkData.dmgArr;
         if (dmgArr.length === 0) {
-            end();
+            cc.log("attack 0");
+            return end();
         }
         let dmgData = dmgArr.pop();
         if (isNaN(dmgData.atk)) {
@@ -407,6 +436,7 @@ cc.Class({
         this.runBuffArr(end, attackRole, "attack", atkData, dmgData);
         this.runBuffArr(end, getHurtRole, "hurt", atkData, dmgData);
         end(this, "oneAttack", attackRole, getHurtRole, dmgData);
+        cc.log("attack", readNum);
         end(readNum);
 
         // let atkData = attackRole.atkData;
@@ -506,6 +536,10 @@ cc.Class({
         return this.resetHurtAct(end, hjm._hero, hjm._en);
     },
 
+    enResetHurtAct (end) {
+        return this.resetHurtAct(end, hjm._en, hjm._hero);
+    },
+
     resetHurtAct (end, attackRole, getHurtRole) {
         // if (attackRole.atkData.isAtk) {
         //     // getHurtRole.en.subRed();
@@ -513,6 +547,7 @@ cc.Class({
         //     getHurtRole.en.rotation = 0;
         // }
         let recoverTime = 0.2;
+        attackRole.en.getComponent(cc.Animation).stop("attack");
         attackRole.resetSpr();
         if (attackRole.atkData.isAtk) {
             getHurtRole.tz(false);

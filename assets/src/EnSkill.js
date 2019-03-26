@@ -12,11 +12,14 @@ cc.Class({
     	let atkData = { //攻击数据
     		atk: dataArr[0],
     		def: dataArr[1],
+            times: dataArr[2],
     		num: 1, // 能量
-            // myBuff: this.addBuffArr(en.atkData.myBuff, dataArr[2]),
-            // enBuff: this.addBuffArr(en.atkData.enBuff, dataArr[2]),
-            myBuff: this.addBuffArr([], dataArr[2]),
-    		enBuff: this.addBuffArr([], dataArr[3])
+            myBuff: dataArr[3],
+            enBuff: dataArr[4]
+      //       // myBuff: this.addBuffArr(en.atkData.myBuff, dataArr[2]),
+      //       // enBuff: this.addBuffArr(en.atkData.enBuff, dataArr[2]),
+      //       myBuff: this.addBuffArr([], dataArr[3]),
+    		// enBuff: this.addBuffArr([], dataArr[4])
     	};
     	return atkData;
     },
@@ -54,21 +57,14 @@ cc.Class({
     	} 
     },
 
-    // addBuff ()
-//返回攻击数据对象 [atk, def, [meBuff], [enBuff]]
+//返回攻击数据对象 [atk, def, times, [meBuff], [enBuff]]
+// plan 有攻击（atk） 防守（def） 强化（add） 负面（sub） 不明（what） 逃跑（run）
     en1 (en, round) {
     	if (round === 0) {
-            let dmgData = {
-                num: NaN,
-                def: 0,
-                myBuff: [],
-                enBuff: [],
-                plan: ""
-            }
-    		return [0, 0, ["ritual"]];
+    		return [0, 10, 1, [], []];
     	}
     	else {
-    		return [3, 0];
+    		return [1, 0, 5, [], []];
     	}
     	// en.skill = fun1;
     },
