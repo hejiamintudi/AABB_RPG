@@ -674,16 +674,79 @@ window.initDylFun = function (cryptoJS) {
         // var isLog = false;
         // isLog = true;
 
+        // 这是给主流程end的一次性包装
+        var oneFun = function oneFun(end, funName) {
+            var hasRun = false; // 是否已经运行过了
+            var fun = function fun() {
+                if ((arguments.length <= 0 ? undefined : arguments[0]) === undefined || typeof (arguments.length <= 0 ? undefined : arguments[0]) === "number" || typeof (arguments.length <= 0 ? undefined : arguments[0]) === "string") {
+                    if (hasRun) {
+                        // 已经运行过了
+                        return cc.warn("函数" + funName + "的end 已经用过了，不能再用");
+                    }
+                    hasRun = true;
+                    end.apply(undefined, arguments);
+                } else {
+                    if (hasRun) {
+                        // 已经运行过了
+                        return cc.warn("函数" + funName + "的end 已经用过了，不能再用");
+                    }
+                    end.apply(undefined, arguments);
+                }
+            };
+            return fun;
+        };
+
+        // 这是给子程序包装的一次性end
+        var once = function (fn, funName) {
+            let result = null;
+            return  function() { 
+                if(fn) {
+                    result = fn.apply(this, arguments);
+                    fn = null;
+                }
+                else {
+                    cc.warn("子程函数" + funName + "的end 只能使用一次");
+                }
+                return result;
+            };
+        }
+        // var oneFun = function (end) {
+        //     var hasRun = false; // 是否已经运行过了
+        //     var fun = function (...arr) {
+        //         if (arr[0] === undefined || typeof arr[0] === "number" || typeof arr[0] === "string") {
+        //             if (hasRun) { // 已经运行过了
+        //                 return cc.warn("这个函数的end 已经用过了，不能再用");
+        //             }
+        //             hasRun = true;
+        //             end(...arr);
+        //         }
+        //         else {
+        //             if (hasRun) { // 已经运行过了
+        //                 return cc.warn("这个函数的end 已经用过了，不能再用");
+        //             }
+        //             end(...arr);
+        //         }
+        //     }
+        //     return fun;
+        // }
+
         var log = function (arr1, arr2) {
             if (cc.sys.isMobile || DylIsFinal) {
                 cc.log(arr1, arr2);
                 return null;
             }
+            var colorTab = {
+                流程:   "color:#AD1500;font-weight:bold;",
+                子程: "color:#FD9A28;font-weight:bold;",
+                读档:   "color:#268AFF;font-weight:bold;",
+                存档:   "color:#37DC94;font-weight:bold;",
+            }
+            var color = colorTab[arr1[1]];
             if (arr1[0] === true) {
                 arr1.splice(0,1);
             }
             var argumentArr = [];
-            console.log("%c" + String(arr1) + " %c" + String(arr2), "color:#37DC94;font-weight:bold;", "color:#FA5C65;font-weight:bold;");
+            console.log("%c" + String(arr1) + " %c" + String(arr2), "color:#37DC94;font-weight:bold;", color);
             // cc.log(...arr1, arr2);
         }
 
@@ -697,17 +760,17 @@ window.initDylFun = function (cryptoJS) {
         //用来保存存档数据的，index代表第几个数字的存档，{arr:nextArr, id:存档点在nextArr的index}
         var saveDataArr = [];
 
-        var runChild = function runChild() {
+        var runChild = function runChild(arg) {
             var i = 0;
             var childCounter = function childCounter() {
                 var data = counterArr[i++];
-                if (isLog) {
-                    // log([isLog, "childCounter",], data);
-                    log([isLog, "childCounter",], "");
-                }
                 if (!data) {
                     counterArr.length = 0;
-                    return counter();
+                    return counter(arg);
+                }
+                if (isLog) {
+                    // log([isLog, "childCounter",], data);
+                    log([isLog, "子程",], data.name);
                 }
                 var childJs = data.childJs,
                     name = data.name,
@@ -715,9 +778,9 @@ window.initDylFun = function (cryptoJS) {
 
                 // childJs[name].apply(childJs, [childCounter].concat(_toConsumableArray(arrr)));
                 if (typeof name === "function") {
-                    name.apply(undefined, [childCounter].concat(_toConsumableArray2(arrr)));
+                    name.apply(undefined, [once(childCounter, "匿名")].concat(_toConsumableArray2(arrr)));
                 } else if (typeof name === "string") {
-                    childJs[name].apply(childJs, [childCounter].concat(_toConsumableArray(arrr)));
+                    childJs[name].apply(childJs, [once(childCounter, name)].concat(_toConsumableArray(arrr)));
                 } else {
                     cc.warn("dyl process 子进程的函数参数出错了，不是函数，也不是字符串");
                 }
@@ -728,15 +791,16 @@ window.initDylFun = function (cryptoJS) {
         var run = function run(branch) {
             //行动
             if (counterArr.length > 0) {
-                return runChild();
+                return runChild(branch);
             }
             var name = nextArr[counterId++];
-            if (isLog) {
-                log([isLog, "counter"], name);
-            }
 
             //先判断是否要去存档点
             if (typeof branch === "number") {
+                if (isLog) {
+                    log([isLog, "读档"], branch);
+                }
+
                 var id = branch;
                 var saveData = saveDataArr[id];
                 // cc.log("read", branch, saveData);
@@ -746,6 +810,18 @@ window.initDylFun = function (cryptoJS) {
                 nextArr = saveData.arr;
                 counterId = saveData.id;
                 return counter();
+            }
+
+            if (isLog) {
+                if (typeof name === "number" && name > 0) {
+                    log([isLog, "存档"], name);
+                }
+                else if (typeof name === "number" && name < 0) {
+                    log([isLog, "读档"], name);
+                }
+                else {
+                    log([isLog, "流程"], name);
+                }
             }
 
             if (!name) {
@@ -775,12 +851,12 @@ window.initDylFun = function (cryptoJS) {
                     //如果没有那就跳到下一个函数，有时候用来分支而已，未必是函数
                     return counter();
                 }
-                return js[name](counter);
+                return js[name](oneFun(counter, name));
             } else if (typeof name === "function") {
                 if (branch) {
                     return cc.error("正常的运行，应该没有分支才对，是不是哪里逻辑出问题了");
                 }
-                return name(counter);
+                return name(oneFun(counter, "匿名"));
             }
 
             //下面是数组，代表分支

@@ -5,6 +5,10 @@ var getNowTime = function () {
 
 // 空是里面执行 负数是循环次数 NaN是无限循环
 window.tz = function (node, ...argArr) {
+	let isDebug = false;
+	isDebug = true;
+	let debugStr = "";
+
 	let stopActArr = []; // {node： node， act： act};
 	let loopArr = []; // 循环数组 参数 fun
 	let isStop = -1; // true 代表暂停， false 代表运行中， -1 代表tz没有建立运行，还不能接受true跟false
@@ -24,14 +28,12 @@ window.tz = function (node, ...argArr) {
             return result;
         };
 	}
-	let isDebug = false;
-	// isDebug = true;
-	dylLog = function (arg) {
+	let dylLog = function (arg) {
 		if (cc.sys.isMobile || DylIsFinal) {
 			cc.log(arg);
 		}
 		else {
-			console.log("%c" + String(arg), "color:#fe8bd9;font-weight:bold;");
+			console.log("%c" + debugStr + String(arg), "color:#fe8bd9;font-weight:bold;");
 		}
 	}
 	// isDebug = true;
@@ -185,6 +187,9 @@ window.tz = function (node, ...argArr) {
 		let act = null;
 		if (typeof data === "string") { //转换为函数，丢给函数处理
 			let str = data;
+			if (debugStr === "") {
+				debugStr = str + " ";
+			}
 			data = function () {
 				cc.log(str);
 			}

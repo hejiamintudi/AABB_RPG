@@ -64,7 +64,7 @@ cc.Class({
     		return [0, 10, 1, [], []];
     	}
     	else {
-    		return [1, 0, 5, [], []];
+    		return [1, 0, 2, [], []];
     	}
     	// en.skill = fun1;
     },
