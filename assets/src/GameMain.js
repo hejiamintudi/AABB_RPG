@@ -549,10 +549,10 @@ cc.Class({
         let recoverTime = 0.2;
         attackRole.en.getComponent(cc.Animation).stop("attack");
         attackRole.resetSpr();
-        let randNum = dyl.rand(238381);
+        // let randNum = dyl.rand(238381);
         if (attackRole.atkData.isAtk) {
             getHurtRole.tz(null);
-            cc.log("resetHurtAct false");
+            // cc.log("resetHurtAct false");
             getHurtRole.tz = tz(getHurtRole)
                                 ._moveTo(recoverTime, getHurtRole.oriPos)
                                   .rotateTo(recoverTime, 0)

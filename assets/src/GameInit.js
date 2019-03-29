@@ -6,7 +6,7 @@ cc.Class({
     },
 
     onLoad () {
-        dyl.setRand(9295271);
+        dyl.setRand(9213);
         // dyl.notify(ai, "drawCard", (newValue, oldValue)=>{
         //     cc.warn("drawCard", oldValue, newValue);
         //     return newValue;

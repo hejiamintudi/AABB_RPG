@@ -16,7 +16,7 @@ cc.Class({
         // 新建buffNode 显示版
         if (name[0] !== "_") {
             buffNode = role.buff.add();
-            cc.log("hjm", name, buffNode.name);
+            // cc.log("hjm", name, buffNode.name);
             hjm[name] = buffNode;
         }
         buff = {
@@ -24,6 +24,12 @@ cc.Class({
             num: 0,
             role: role,
             buffNode: buffNode
+        }
+        if (name[0] !== "_") {
+            dyl.notify(buff, "num", (newData, oldData)=>{
+                buffNode.num = newData;
+                return newData;
+            })
         }
         return buff;
     },

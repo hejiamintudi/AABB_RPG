@@ -255,7 +255,7 @@ window.tz = function (node, ...argArr) {
 				return proxy;
 			}
 			if (stopActArr.length === 0) {
-				cc.warn("tz 这里没有要删除的动作表，是否都是函数？");
+				// cc.warn("tz 这里没有要删除的动作表，是否都是函数？");
 				return proxy;
 			}
 			for (var i = stopActArr.length - 1; i >= 0; i--) {
