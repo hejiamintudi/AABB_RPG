@@ -143,7 +143,7 @@ cc.Class({
         node.opacity = 255;
 
         let time = 0.5;
-        tz(node)._moveBy(time, cc.v2(0, 200))
+        tz(node)("1_pool")._moveBy(time, cc.v2(0, 200))
                 ._fadeTo(time, 0)
                 (counter)();
 
@@ -153,7 +153,7 @@ cc.Class({
         let particleSystem = node.getComponent(cc.ParticleSystem);
         particleSystem.resetSystem();
         let time = particleSystem.duration + particleSystem.life + particleSystem.lifeVar;
-        tz(time)(counter)();
+        tz("2_pool")(time)(counter)();
         // return cc.warn("暂时还没有完善粒子播放功能");
     },
 

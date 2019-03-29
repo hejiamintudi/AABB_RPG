@@ -549,8 +549,10 @@ cc.Class({
         let recoverTime = 0.2;
         attackRole.en.getComponent(cc.Animation).stop("attack");
         attackRole.resetSpr();
+        let randNum = dyl.rand(238381);
         if (attackRole.atkData.isAtk) {
-            getHurtRole.tz(false);
+            getHurtRole.tz(null);
+            cc.log("resetHurtAct false");
             getHurtRole.tz = tz(getHurtRole)
                                 ._moveTo(recoverTime, getHurtRole.oriPos)
                                   .rotateTo(recoverTime, 0)
@@ -570,7 +572,8 @@ cc.Class({
         let backTime = 0.1;
         dyl.shake(hjm._bg, backTime);
         getHurtRole.en.oneRed();
-        getHurtRole.tz(false);
+        getHurtRole.tz(null);
+        // cc.log("getHurtAct false");
 
         getHurtRole.setPosition(getHurtRole.oriPos);
         getHurtRole.rotation = 0;
@@ -615,7 +618,7 @@ cc.Class({
 
             hjm._eff.add(getHurtRole, -attackRole.atkData.hurtNum); // 待定
             dyl.shake(hjm._bg, 0.2);
-            tz(getHurtRole)
+            tz(getHurtRole)("1_attackEndAct")
                 ._moveBy(0.1, cc.v2(80 * dir, 0))
                 ._rotateTo(0.1, 15 * dir)
                 ._moveBy(0.2, cc.v2(-80 * dir, 0))
@@ -632,7 +635,7 @@ cc.Class({
         // let rotate1 = cc.rotateTo(0.2, 0);
         // let getHurtAct1 = cc.spawn(back1, rotate1);
 
-        let act = tz();
+        let act = tz()("2_attackEndAct");
         act._moveBy(attackRole, recoverTime, recoverP)
             // .sequence(getHurtRole, getHurtAct, getHurtAct1)
             (getHurtActFun)
