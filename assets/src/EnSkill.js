@@ -15,7 +15,8 @@ cc.Class({
             times: dataArr[2],
     		num: 1, // 能量
             myBuff: dataArr[3],
-            enBuff: dataArr[4]
+            enBuff: dataArr[4],
+            type: "main"
       //       // myBuff: this.addBuffArr(en.atkData.myBuff, dataArr[2]),
       //       // enBuff: this.addBuffArr(en.atkData.enBuff, dataArr[2]),
       //       myBuff: this.addBuffArr([], dataArr[3]),
@@ -60,7 +61,7 @@ cc.Class({
 //返回攻击数据对象 [atk, def, times, [meBuff], [enBuff]]
 // plan 有攻击（atk） 防守（def） 强化（add） 负面（sub） 不明（what） 逃跑（run）
     en1 (en, round) {
-    	if (round === 0) {
+    	if (round === 1) {
     		return [0, 10, 1, [], []];
     	}
     	else {

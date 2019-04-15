@@ -1,4 +1,5 @@
 // label这个比较特别，只能当飙血特效
+// label 0 白色 > 0 绿色 < 0 红色 NaN 不显示
 cc.Class({
     extends: cc.Component,
     properties: {
@@ -88,6 +89,11 @@ cc.Class({
     playLabel: function (node, str, counter) {
         let lab = node.getComponent(cc.Label);
         lab.string = String(str);
+        if (isNaN(str)) {
+            node.active = false;
+            return counter();
+        }
+        node.active = true;
         let num = Number(str);
         if (num < 0) {
             node.color = cc.color(255, 10, 10);

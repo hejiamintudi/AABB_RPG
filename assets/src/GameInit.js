@@ -49,6 +49,9 @@ cc.Class({
             if (newValue <= 0) {
                 hjm._hero.def = false;
             }
+            else if (isNaN(newValue)) {
+                hjm._hero.def = false;
+            }
             else {
                 hjm._hero.def = true;
             }

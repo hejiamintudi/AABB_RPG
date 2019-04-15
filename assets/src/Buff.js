@@ -126,21 +126,31 @@ cc.Class({
         let buffArr = role.buffArr;
         for (let i = 0; i < buffArr.length; i++) {
             let buff = buffArr[i];
-            if (buff.state === buffStateName) {
+            if (buff.delState === buffStateName) {
                 // end, atkData, buff, role
-                end(buff, "fun", atkData, buff, role, ...argArr);
                 end(buffArr, buff.delFun, buff);
                 // buff.fun(endFun, atkData, buff, role);
             }
         }
-        if (buffStateName === "endTurn") {
-            for (let i = 0; i < buffArr.length; i++) {
-                let buff = buffArr[i];
-                if (buff.delFun === "endTurn") {
-                    buffArr.del(buff);
+        for (let i = 0; i < buffArr.length; i++) {
+            let buff = buffArr[i];
+            if (buff.state === buffStateName) {
+                // end, atkData, buff, role
+                end(buff, "fun", atkData, buff, role, ...argArr);
+                if (buff.delState === null) {
+                    end(buffArr, buff.delFun, buff);
                 }
+                // buff.fun(endFun, atkData, buff, role);
             }
         }
+        // if (buffStateName === "endTurn") {
+        //     for (let i = 0; i < buffArr.length; i++) {
+        //         let buff = buffArr[i];
+        //         if (buff.delFun === "endTurn") {
+        //             buffArr.del(buff);
+        //         }
+        //     }
+        // }
         end(buffArr, "resetBuff");
     },
 
@@ -153,6 +163,7 @@ cc.Class({
 
         let buff = roleNode.buffArr.add("ritual", num);
         buff.state = "preTurn";
+        buff.delState = null;
         buff.delFun = "keep";
 
         buff.fun = (end, atkData, buff, role)=>{
@@ -165,6 +176,7 @@ cc.Class({
     dmg (roleNode, num = 1) {
         let buff = roleNode.buffArr.add("dmg", num);
         buff.state = "preAttack";
+        buff.delState = null;
         buff.delFun = "zero";
 
         buff.fun = (end, atkData, buff, role)=>{
@@ -188,7 +200,8 @@ cc.Class({
     liliang (roleNode, num = 1) {
         let buff = roleNode.buffArr.add("liliang", num);
         buff.state = "preAttack";
-        buff.delFun = "endTurn";
+        buff.delState = "endTurn";
+        buff.delFun = "zero";
 
         buff.fun = (end, atkData, buff, role)=>{
             atkData.atk += buff.num;
@@ -199,6 +212,7 @@ cc.Class({
     forget (roleNode, num = 1) {
         let buff = roleNode.buffArr.add("_forget", num);
         buff.state = "discard";
+        buff.delState = null;
         buff.delFun = "zero";
 
         buff.fun = (end, atkData, buff, role)=>{

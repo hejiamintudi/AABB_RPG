@@ -21,17 +21,17 @@ cc.Class({
         let arr = [
             "preCombat", 
             "preCombatAct",
-                1,  "dealCard", "myPreTurn",  //出牌前
+                1,  "enGetAtkData", "enPreAttack", // 敌人的数据要一开始就显示，所以要先获取数据
+                    "dealCard", "myPreTurn",  //出牌前
                 2,  "myGetAllCardData", "myGetAllCardNum", "touchCard", // 触摸操作
                     "getPlayCard", "myGetAtkData", "myMainSkill", // 获取卡牌数据
-                    "myPreAttack", "myAddMainDmg", "myPreAttackAct", 
+                    "myPreAttack", "updateDataShow", "myAddMainDmg", "myPreAttackAct", 
                     3, "myAttack_3", 
                         "myEndAttack", "myResetHurtAct", "checkDie",
                         "discardBuff", "discard", "myCheckNotCard_2",
                 "myEndTurn", // 我方结束回合后 
 
-                "enGetAtkData", 
-                "enPreAttack", "enAddMainDmg", "enPreAttackAct", 
+                "enAddMainDmg", "enPreAttackAct", 
                     4, "enAttack_4", 
                         "enEndAttack", "enResetHurtAct", "checkDie",
                 "enEndTurn",  
@@ -124,7 +124,7 @@ cc.Class({
     getInitCardData (card) {
         let data = {
             atk: card.atk < 0 ? NaN : card.atk,
-            def: card.def,
+            def: card.def < 0 ? NaN : card.def,
             times : card.times,
             // num: this._playCardArr.length,
             num: 0, // num = friend所有的friendNum + 自身mainNum
@@ -137,10 +137,77 @@ cc.Class({
             playCardArr: null,
             cardType: card.type,
 
-            dmgArr: [] // 记录不同伤害的数组
+            dmgArr: [], // 记录不同伤害的数组
+
+            addDataArr: [],
+            type: "main"
         }
         // card.def = !!card.def; // 设置def是否显示
         return data;
+    },
+
+    // 查看两个数组是否有相同的元素
+    isX (type, typeArr) {
+        return (typeArr.indexOf(type) !== -1);
+        // for (var i = arr1.length - 1; i >= 0; i--) {
+        //     if (arr2.indexOf(arr1) !== -1) {
+        //         return true;
+        //     }
+        // }
+        // return false;
+    },
+
+    // 返回的是一个简约版的dmgData，只要攻击和防御
+    getEndData (oriData, buffArr, isChangeOriData) {
+        let tab = {
+                    atk_mul: 1, // 乘法因子
+                    atk_add: 0, // 加法因子
+                    def_mul: 1, // 乘法因子
+                    def_add: 0 // 加法因子
+                }
+
+        // 一种类型的处理
+        let oneTypeFun = (data, type)=>{
+            if (typeof data[type] === "string") {
+                tab[type + "_mul"] *= Number(data[type]);
+            }
+            else {
+                tab[type + "_add"] += data[type];
+            }
+        } 
+
+        let fun = (data)=>{
+            oneTypeFun(data, "atk");
+            oneTypeFun(data, "def");
+        }
+
+        for (let i = 0; i < buffArr.length; i++) {
+            let buff = buffArr[i];
+            if (!buff.addFun) {
+                continue;
+            }
+            let addData = buff.addFun();
+            if (this.isX(oriData.type, addData.typeArr)) {
+                fun(addData);
+            }
+        }
+
+        // 数值要向上取整
+        let getEndValue = (type)=>{
+            return Math.ceil(oriData[type] * tab[type + "_mul"] + tab[type + "_add"]);
+        }
+        let endData = {
+            atk: getEndValue("atk"),
+            def: getEndValue("def")
+        };
+
+        if (isChangeOriData) {
+            for (let i in endData) {
+                oriData[i] = endData[i];
+            }
+        }
+        
+        return endData;
     },
 
     myGetAtkData (end) {
@@ -201,26 +268,70 @@ cc.Class({
         end();
     },
 
+    resetEnShow (data) {
+        let en = hjm._en;
+
+        // 意图图案显示
+        en.gongshi = !(isNaN(data.atk) || (data.atk === 0));
+        en.shoushi = !(isNaN(data.def) || (data.def === 0));
+        en.fumian = (data.enBuff.length > 0);
+        en.qianghua = (data.myBuff.length > 0);
+
+        // 攻击力显示
+        if (isNaN(data.atk) || (data.atk === 0)) {
+            return;
+        }
+        let atkStr = String(data.atk);
+        if (data.times > 1) {
+            atkStr = atkStr + " X " + String(data.times);
+        }
+        en.atkLab = atkStr;
+    },
+
+    updateDataShow (end = ()=>null) { // 这个没有延迟的
+        let enEndData = this.getEndData(hjm._en.atkData, hjm._en.buffArr);
+        this.resetEnShow(data);
+        end();
+    },
+
     myPreAttackAct (end) {
         return this.attackPreAct(end, hjm._hero, hjm._en);
     },
 
-    myAddMainDmg (end) {
-        let atkData = hjm._hero.atkData;
+    addMainDmg (end, role) {
+        let atkData = role.atkData;
         // atkData.dmgArr = [data, ...atkData.dmgArr];
-        for (let i = 0; i < atkData.times; i++) {
-            let data = {
-                atk: atkData.num * atkData.atk,
-                def: atkData.num * atkData.def,
-                name: "main",  //
-                type: "ad",
-                myBuff: atkData.myBuff,
-                enBuff: atkData.enBuff
+        let data = {
+            atk: atkData.atk,
+            def: atkData.def,
+            name: "main",  //
+            type: "ad",   // 
+            myBuff: atkData.myBuff,
+            enBuff: atkData.enBuff
 
-            };
-            atkData.dmgArr.push(data);
+        };
+        let oriDmgArr = [...atkData.dmgArr, data];
+        let dmgArr = [];
+        // atkData.dmgArr.push(data);
+        for (let i = 0; i < atkData.times; i++) {
+            for (let j = 0; j < oriDmgArr.length; j++) {
+                let newData = {};
+                // 深度拷贝
+                for (let name in oriDmgArr[j]) {
+                    let value = oriDmgArr[j][name];
+                    // 只是发现有数组，没有发现对象，所以暂时不考虑这情况
+                    if (Array.isArray(value)) {
+                        newData[name] = [...value];
+                    }
+                    else {
+                        newData[name] = value;
+                    }
+                }
+                dmgArr.push(newData);
+            }
         }
-        let dmgArr = atkData.dmgArr;
+        atkData.dmgArr = dmgArr;
+        // let dmgArr = atkData.dmgArr;
         atkData.isAtk = false;
 
         // 改为实时监测
@@ -233,22 +344,73 @@ cc.Class({
         end();
     },
 
+    myAddMainDmg (end) {
+        let atkData = hjm._hero.atkData;
+        atkData.atk = atkData.num * atkData.atk;
+        atkData.def = atkData.num * atkData.def;
+        return this.addMainDmg(end, hjm._hero);
+        // let atkData = hjm._hero.atkData;
+        // // atkData.dmgArr = [data, ...atkData.dmgArr];
+        // let data = {
+        //     atk: atkData.num * atkData.atk,
+        //     def: atkData.num * atkData.def,
+        //     name: "main",  //
+        //     type: "ad",
+        //     myBuff: atkData.myBuff,
+        //     enBuff: atkData.enBuff
+
+        // };
+        // let oriDmgArr = [...atkData.dmgArr, data];
+        // let dmgArr = [];
+        // // atkData.dmgArr.push(data);
+        // for (let i = 0; i < atkData.times; i++) {
+        //     for (let j = 0; j < oriDmgArr.length; j++) {
+        //         let newData = {};
+        //         // 深度拷贝
+        //         for (let name in oriDmgArr[j]) {
+        //             let value = oriDmgArr[j][name];
+        //             // 只是发现有数组，没有发现对象，所以暂时不考虑这情况
+        //             if (Array.isArray(value)) {
+        //                 newData[name] = [...value];
+        //             }
+        //             else {
+        //                 newData[name] = value;
+        //             }
+        //         }
+        //         dmgArr.push(newData);
+        //     }
+        // }
+        // atkData.dmgArr = dmgArr;
+        // // let dmgArr = atkData.dmgArr;
+        // atkData.isAtk = false;
+
+        // // 改为实时监测
+        // // for (var i = dmgArr.length - 1; i >= 0; i--) {
+        // //     if (!isNaN(dmgArr[i].num)) {
+        // //         atkData.isAtk = true;
+        // //         break;
+        // //     }
+        // // }
+        // end();
+    },
+
     enAddMainDmg (end) {
-        let atkData = hjm._en.atkData;
-        atkData.dmgArr = [];
-        for (let i = 0; i < atkData.times; i++) {
-            let data = {
-                atk: atkData.atk,
-                def: atkData.def,
-                name: "main",
-                type: "ad",
-                myBuff: atkData.myBuff,
-                enBuff: atkData.enBuff
-            };
-            atkData.dmgArr.push(data);
-        }
-        atkData.isAtk = false;
-        end();
+        return this.addMainDmg(end, hjm._en);
+        // let atkData = hjm._en.atkData;
+        // atkData.dmgArr = [];
+        // for (let i = 0; i < atkData.times; i++) {
+        //     let data = {
+        //         atk: atkData.atk,
+        //         def: atkData.def,
+        //         name: "main",
+        //         type: "ad",
+        //         myBuff: atkData.myBuff,
+        //         enBuff: atkData.enBuff
+        //     };
+        //     atkData.dmgArr.push(data);
+        // }
+        // atkData.isAtk = false;
+        // end();
     },
 
     enPreAttackAct (end) {
@@ -360,11 +522,23 @@ cc.Class({
     // 作用完buff后，直接攻击
     oneAttack (end, attackRole, getHurtRole, dmgData) {
         let {atk, name, myBuff, enBuff, def} = dmgData;
+        if (isNaN(def)) {
+            def = 0;
+        }
+        let showAtk = atk; // 显示出来的伤害，而atk在下面是表示扣去def后的伤害
         // cc.log("myBuff", )
         // 数值处理
         attackRole.def += def;
-        if (getHurtRole.def > atk) { // 护甲足够，不用扣血
+        // if (isNaN(attackRole.def)) {
+        //     attackRole.def = 0;
+        // }
+        if (isNaN(atk)) {
+            cc.log("不是攻击类型");
+        }
+        else if (getHurtRole.def > atk) { // 护甲足够，不用扣血
+            attackRole.atkData.isAtk = true;
             getHurtRole.def -= atk;
+            this.getHurtAct(attackRole, getHurtRole);
         }
         else { // 扣血，扣护甲
             attackRole.atkData.isAtk = true;
@@ -395,6 +569,7 @@ cc.Class({
             }
             // Buff[enBuff[i]](getHurtRole);
         }
+        this.updateDataShow();
 
         // 特效处理
         if (isNaN(atk)) { // 非攻击状态
@@ -408,16 +583,21 @@ cc.Class({
         }
         else {             
             if (hjm._buff[name]) {
-                hjm._buff[name].add(cc.v2(getHurtRole), atk);
+                hjm._buff[name].add(cc.v2(getHurtRole), -showAtk);
             }
             else {
-                hjm._buff.defaultAtk.add(cc.v2(getHurtRole), atk);
+                hjm._buff.defaultAtk.add(cc.v2(getHurtRole), -showAtk);
             }
         }
         // end();
 
         // 延时处理
         tz(0.1, end)();
+    },
+
+    attack_getEndData(end, oriData, buffArr, isChangeOriData) {
+        this.getEndData(oriData, buffArr, isChangeOriData);
+        end();
     },
 
     // runBuffArr (end, role, buffStateName, atkData, ...argArr)
@@ -430,13 +610,14 @@ cc.Class({
             return end();
         }
         let dmgData = dmgArr.pop();
-        if (isNaN(dmgData.atk)) {
-            dmgData.atk = 0;
-        }
+        // if (isNaN(dmgData.atk)) {
+        //     dmgData.atk = 0;
+        // }
         this.runBuffArr(end, attackRole, "attack", atkData, dmgData);
+        end(this, "attack_getEndData", dmgData, attackRole.buffArr, true);
         this.runBuffArr(end, getHurtRole, "hurt", atkData, dmgData);
         end(this, "oneAttack", attackRole, getHurtRole, dmgData);
-        cc.log("attack", readNum);
+        // cc.log("attack", readNum);
         end(readNum);
 
         // let atkData = attackRole.atkData;
@@ -925,6 +1106,15 @@ cc.Class({
         // cc.log("showNode atk", showNode.atk);
         // if (showNode.atk < 0) {
         // showNode.Atk = showNode.atk > 0; 
+        let atkData = {
+            atk: showNode.atk,
+            def: showNode.def
+        };
+        let endData = this.getEndData(atkData, hjm._hero.buffArr);
+        let fun = (index)=>{
+
+        }
+
         if (showNode.atk > 0) {
             showNode.atkLab = playColor;
             showNode.atk = true;
@@ -932,6 +1122,10 @@ cc.Class({
         else {
             showNode.atkLab = stopColor;
             showNode.atk = false;
+        }
+
+        if (isNaN(showNode.def)) {
+            showNode.def = 0;
         }
 
         if (showNode.def > 0) {
