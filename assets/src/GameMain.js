@@ -22,7 +22,7 @@ cc.Class({
             "preCombat", 
             "preCombatAct",
                 1,  "enGetAtkData", "enPreAttack", // 敌人的数据要一开始就显示，所以要先获取数据
-                    "dealCard", "myPreTurn",  //出牌前
+                    "dealCard", "myPreTurn", "updateDataShow",  //出牌前
                 2,  "myGetAllCardData", "myGetAllCardNum", "touchCard", // 触摸操作
                     "getPlayCard", "myGetAtkData", "myMainSkill", // 获取卡牌数据
                     "myPreAttack", "updateDataShow", "myAddMainDmg", "myPreAttackAct", 
@@ -274,8 +274,8 @@ cc.Class({
         // 意图图案显示
         en.gongshi = !(isNaN(data.atk) || (data.atk === 0));
         en.shoushi = !(isNaN(data.def) || (data.def === 0));
-        en.fumian = (data.enBuff.length > 0);
-        en.qianghua = (data.myBuff.length > 0);
+        en.fumian = (hjm._en.atkData.enBuff.length > 0);
+        en.qianghua = (hjm._en.atkData.myBuff.length > 0);
 
         // 攻击力显示
         if (isNaN(data.atk) || (data.atk === 0)) {
@@ -290,7 +290,7 @@ cc.Class({
 
     updateDataShow (end = ()=>null) { // 这个没有延迟的
         let enEndData = this.getEndData(hjm._en.atkData, hjm._en.buffArr);
-        this.resetEnShow(data);
+        this.resetEnShow(enEndData);
         end();
     },
 
@@ -1047,7 +1047,7 @@ cc.Class({
                 discardArr[i].opacity = 255;
             }
         }
-
+       
         act._();
         act._();
 
@@ -1111,31 +1111,54 @@ cc.Class({
             def: showNode.def
         };
         let endData = this.getEndData(atkData, hjm._hero.buffArr);
-        let fun = (index)=>{
+        let fun = (name)=>{
+            if (isNaN(atkData[name])) {
+                showNode[name + "Lab"] = stopColor;
+                showNode[name] = false;
+                showNode[name + "AddLab"] = false;
+            }
+            else {
+                showNode[name + "Lab"] = playColor;
+                showNode[name] = true;
+                showNode[name + "AddLab"] = true;   
+                let addNum = endData[name] - atkData[name];
+                showNode[name] = atkData[name];
+                let str = "";
+                if (addNum > 0) {
+                    showNode[name + "AddLab"] = cc.color(0, 255, 0);
+                    str = "(+" + String(addNum) + ")";
+                }
+                else if (addNum < 0) {
+                    showNode[name + "AddLab"] = cc.color(255, 0, 0);
+                    str = "(" + String(addNum) + ")";
+                }
+                showNode[name + "AddLab"] = str;
+            }
 
         }
+        fun("atk");
+        fun("def");
+        // if (showNode.atk > 0) {
+        //     showNode.atkLab = playColor;
+        //     showNode.atk = true;
+        // }
+        // else {
+        //     showNode.atkLab = stopColor;
+        //     showNode.atk = false;
+        // }
 
-        if (showNode.atk > 0) {
-            showNode.atkLab = playColor;
-            showNode.atk = true;
-        }
-        else {
-            showNode.atkLab = stopColor;
-            showNode.atk = false;
-        }
+        // if (isNaN(showNode.def)) {
+        //     showNode.def = 0;
+        // }
 
-        if (isNaN(showNode.def)) {
-            showNode.def = 0;
-        }
-
-        if (showNode.def > 0) {
-            showNode.defLab = playColor;
-            showNode.def = true;
-        }
-        else {
-            showNode.defLab = stopColor;
-            showNode.def = false;
-        }
+        // if (showNode.def > 0) {
+        //     showNode.defLab = playColor;
+        //     showNode.def = true;
+        // }
+        // else {
+        //     showNode.defLab = stopColor;
+        //     showNode.def = false;
+        // }
 
         if (showNode.skillNum <= showNode.power) {
             showNode.mainSkillLab = playColor;
