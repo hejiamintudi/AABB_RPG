@@ -25,10 +25,11 @@ cc.Class({
                     "dealCard", "myPreTurn", "updateDataShow",  //出牌前
                 2,  "myGetAllCardData", "myGetAllCardNum", "touchCard", // 触摸操作
                     "getPlayCard", "myGetAtkData", "myMainSkill", // 获取卡牌数据
-                    "myPreAttack", "updateDataShow", "myAddMainDmg", "myPreAttackAct", 
+                    "resetHandPos", "myPreAttack", "updateDataShow", "myAddMainDmg", "myPreAttackAct", 
                     3, "myAttack_3", 
                         "myEndAttack", "myResetHurtAct", "checkDie",
-                        "discardBuff", "discard", "myCheckNotCard_2",
+                        // "discardBuff", "discard", 
+                        "myCheckNotCard_2",
                 "myEndTurn", // 我方结束回合后 
 
                 "enAddMainDmg", "enPreAttackAct", 
@@ -187,11 +188,13 @@ cc.Class({
                 continue;
             }
             let addData = buff.addFun();
+            // cc.log(oriData.type, addData.typeArr);
             if (this.isX(oriData.type, addData.typeArr)) {
+                // cc.log("isX", addData);
                 fun(addData);
             }
         }
-
+        // cc.log("endData tab", tab);
         // 数值要向上取整
         let getEndValue = (type)=>{
             return Math.ceil(oriData[type] * tab[type + "_mul"] + tab[type + "_add"]);
@@ -279,11 +282,13 @@ cc.Class({
 
         // 攻击力显示
         if (isNaN(data.atk) || (data.atk === 0)) {
+            en.atkLab = false;
             return;
         }
+        en.atkLab = true;
         let atkStr = String(data.atk);
-        if (data.times > 1) {
-            atkStr = atkStr + " X " + String(data.times);
+        if (hjm._en.atkData.times > 1) {
+            atkStr = atkStr + " X " + String(hjm._en.atkData.times);
         }
         en.atkLab = atkStr;
     },
@@ -300,6 +305,7 @@ cc.Class({
 
     addMainDmg (end, role) {
         let atkData = role.atkData;
+        this.getEndData (atkData, role.buffArr, true);
         // atkData.dmgArr = [data, ...atkData.dmgArr];
         let data = {
             atk: atkData.atk,
@@ -1013,6 +1019,7 @@ cc.Class({
     },
 
     resetHandPos (end) {
+        end();
         let arr = [...ai.hand]; // 这是手牌，包括要被丢弃的牌和要保留的牌
         let discardArr = []; // 这是代表要被丢弃的牌
         ai.hand.length = 0;
@@ -1064,7 +1071,8 @@ cc.Class({
         }
 
 
-        act._()(delCardFun)(end)();
+        // act._()(delCardFun)(end)();
+        act._()(delCardFun)();
     },
 
 
@@ -1107,8 +1115,9 @@ cc.Class({
         // if (showNode.atk < 0) {
         // showNode.Atk = showNode.atk > 0; 
         let atkData = {
-            atk: showNode.atk,
-            def: showNode.def
+            atk: showNode.atk < 0 ? NaN : showNode.atk,
+            def: showNode.def < 0 ? NaN : showNode.def,
+            type: "main"
         };
         let endData = this.getEndData(atkData, hjm._hero.buffArr);
         let fun = (name)=>{
@@ -1122,6 +1131,7 @@ cc.Class({
                 showNode[name] = true;
                 showNode[name + "AddLab"] = true;   
                 let addNum = endData[name] - atkData[name];
+                // cc.log("addNum", name, endData[name], atkData[name], addNum);
                 showNode[name] = atkData[name];
                 let str = "";
                 if (addNum > 0) {

@@ -16,7 +16,9 @@ cc.Class({
     		num: 1, // 能量
             myBuff: dataArr[3],
             enBuff: dataArr[4],
-            type: "main"
+            type: "main",
+            dmgArr: [],
+            addDataArr: []
       //       // myBuff: this.addBuffArr(en.atkData.myBuff, dataArr[2]),
       //       // enBuff: this.addBuffArr(en.atkData.enBuff, dataArr[2]),
       //       myBuff: this.addBuffArr([], dataArr[3]),

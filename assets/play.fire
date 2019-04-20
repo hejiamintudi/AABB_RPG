@@ -41,8 +41,8 @@
     },
     "_scale": {
       "__type__": "cc.Vec3",
-      "x": 0.3477864583333333,
-      "y": 0.3477864583333333,
+      "x": 0.34824942129629627,
+      "y": 0.34824942129629627,
       "z": 1
     },
     "_quat": {
@@ -2335,7 +2335,7 @@
       "__id__": 33
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_level": 2,
     "_components": [
       {
@@ -2515,7 +2515,7 @@
       "__id__": 33
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_level": 2,
     "_components": [
       {
@@ -2605,7 +2605,7 @@
       "__id__": 33
     },
     "_children": [],
-    "_active": true,
+    "_active": false,
     "_level": 2,
     "_components": [
       {
@@ -5210,7 +5210,7 @@
       "__id__": 5
     },
     "_enabled": true,
-    "dealCardTime": 0.3,
+    "dealCardTime": 0.1,
     "cardDis": 160,
     "cardY": -368,
     "_id": "f5zDS1mUtLNKQLj9rLPFrT"

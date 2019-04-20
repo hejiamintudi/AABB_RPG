@@ -199,14 +199,25 @@ cc.Class({
 
     liliang (roleNode, num = 1) {
         let buff = roleNode.buffArr.add("liliang", num);
-        buff.state = "preAttack";
+        // buff.state = "preAttack";
+        buff.state = null;
         buff.delState = "endTurn";
         buff.delFun = "zero";
 
-        buff.fun = (end, atkData, buff, role)=>{
-            atkData.atk += buff.num;
-            end();
-        };
+        // buff.fun = (end, atkData, buff, role)=>{
+        //     atkData.atk += buff.num;
+        //     end();
+        // };
+        buff.addFun = function (){
+            // cc.log("liliang addFun");
+            let addData = {
+                atk: 1,
+                def: 0,
+                typeArr: ["main"],
+                name: "liliang"
+            }
+            return addData;
+        }
     },
 
     forget (roleNode, num = 1) {
