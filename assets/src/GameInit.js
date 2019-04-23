@@ -36,14 +36,14 @@ cc.Class({
         hjm._en.type = -1;
         hjm._hero.type = 1;
         hjm._hero.hp = "030";
-        hjm._en.hp = "030";
+        hjm._en.hp = "03";
 
         hjm._en.oriPos = cc.v2(hjm._en);
         hjm._hero.oriPos = cc.v2(hjm._hero);
 
-        // 开始时，没有动作
-        hjm._hero.tz = ()=>null;
-        hjm._en.tz = ()=>null;
+        // // 开始时，没有动作
+        // hjm._hero.tz = ()=>null;
+        // hjm._en.tz = ()=>null;
 
         hjm._hero.def = (newValue, oldValue)=>{
             if (newValue <= 0) {
@@ -66,7 +66,22 @@ cc.Class({
             }
         }
 
+        // 这里添加 hp 小于等于 0 的死亡动画，不断变透明
+        let dieFun = function (newValue, oldValue, role){
+            if (newValue <= 0) {
+                tz(role).fadeTo(0.1, 0)();
+            }
+            return newValue;
+        }
+        // hjm._hero.hp = (newValue, oldValue)=>dieFun(newValue, oldValue, hjm._hero.en);
+        hjm._en.hp = (newValue, oldValue)=>dieFun(newValue, oldValue, hjm._en.en);
+
         hjm._en.enName = this.enName; 
+
+        this.setGetHurtFun(hjm._hero, -1);
+        this.setGetHurtFun(hjm._en,    1);
+        // this.setDieFun(hjm._hero);
+        // this.setDieFun(hjm._en);
 
         let arr = ["addHero", "addEn", "addCardArr", "startGame"];
         dyl.process(this, arr);
@@ -75,6 +90,80 @@ cc.Class({
     playAttack () {
         hjm._en.en.getComponent(cc.Animation).play("attack");
     },
+
+    // setDieFun (role) {
+    //     tz(role).fadeTo
+    // },
+
+    setGetHurtFun (role, dir) {
+        // isNotDef 代表是否要无视护甲
+        role.getHurt = function (num, isNotDef) {
+            // 不接受回血，没有受到伤害的处理
+            if (isNaN(num) || (num <= 0)) {
+                return;
+            }
+            let backTime = 0.1;
+            dyl.shake(hjm._bg, backTime);
+            role.en.oneRed();
+            role.tz(null); 
+
+            role.setPosition(role.oriPos);
+            role.rotation = 0;
+
+            role.tz = tz(role)
+                ._moveBy(backTime, cc.v2(80 * dir, 0))
+                ._rotateTo(role.en, backTime, 15 * dir)
+                ();
+            if (isNotDef) { // 无视护甲真实伤害
+                role.hp -= num;
+            }
+            else { // 普通伤害
+                if (role.def > num) { // 护甲足够，不用扣血
+                    // attackRole.atkData.isAtk = true; // 这句应该放在攻击函数里
+                    role.def -= num;
+                    // this.getHurtAct(attackRole, getHurtRole); // 这句应该放在攻击函数里
+                }
+                else { // 扣血，扣护甲
+                    // attackRole.atkData.isAtk = true; // 这句应该放在攻击函数里
+                    role.hp = role.hp - num + role.def;
+                    role.def = 0;
+                    // this.getHurtAct(attackRole, getHurtRole);
+                }
+            }
+            hjm._buff.defaultHurt.add(role, -num);
+        }
+        role.tz = ()=>null;
+    },
+
+    // getHurtAct (attackRole, getHurtRole) {
+    //     let dir = attackRole.type;
+    //     let backTime = 0.1;
+    //     dyl.shake(hjm._bg, backTime);
+    //     getHurtRole.en.oneRed();
+    //     getHurtRole.tz(null);
+    //     // cc.log("getHurtAct false");
+
+    //     getHurtRole.setPosition(getHurtRole.oriPos);
+    //     getHurtRole.rotation = 0;
+
+    //     getHurtRole.tz = tz(getHurtRole)
+    //         ._moveBy(backTime, cc.v2(80 * dir, 0))
+    //         ._rotateTo(backTime, 15 * dir)
+    //         ();
+
+    //     // let isAtk = attackRole.atkData.isAtk;
+    //     // let dir = attackRole.type;
+        
+    //     // let recoverP = cc.v2(-100 * dir, 0); // 恢复动作的位移
+
+    //     // if (isAtk) {
+    //     //     getHurtRole.en.addRed();
+    //     //     dyl.shake(hjm._bg, 0.2);
+    //     //     getHurtRole.en.setPosition(cc.v2(80 * dir, 0));
+    //     //     getHurtRole.en.rotation = 15 * dir;
+    //     // }
+    //     // end();
+    // },
 
     addHero (end) {
         let frames = [];

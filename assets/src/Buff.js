@@ -16,6 +16,7 @@ cc.Class({
         // 新建buffNode 显示版
         if (name[0] !== "_") {
             buffNode = role.buff.add();
+            buffNode.name = "buff";
             // cc.log("hjm", name, buffNode.name);
             hjm[name] = buffNode;
         }
@@ -60,6 +61,7 @@ cc.Class({
             // buff.buffNode.num = num;
             dyl.set(buff.buffNode, "num", buff.num);
             buff.isDel = false; 
+            this.resetPos();
             return buff;
         }
 
@@ -99,7 +101,7 @@ cc.Class({
             for (let i = 0; i < this.length; i++) {
                 let buff = arr[i];
                 if (buff.buffNode && !buff.isDel) {
-                    buff.buffNode.x = id * 100;
+                    buff.buffNode.x = id * 64;
                     id++;
                 }
             }
@@ -197,6 +199,82 @@ cc.Class({
     //     };
     // },
 
+    // 重击 下次攻击造成的伤害增加 num倍
+    timesDmg (roleNode, num = 1) {
+        let  buff = roleNode.buffArr.add("timesDmg", num);
+        buff.state = null;
+        buff.delState = "endAttack";
+        buff.delFun = "zero";
+        buff.addFun = function (){
+            // cc.log("liliang addFun");
+            let addData = {
+                atk: String(this.num + 1),
+                def: 0,
+                typeArr: ["ap", "ad"],
+                name: "timesDmg"
+            }
+            return addData;
+        }
+    },
+
+    // 每次打出攻击牌，都可以获得跟层数一样护甲
+    atkDef (roleNode, num = 1) {
+        let buff = roleNode.buffArr.add("atkDef", num);
+        // buff.state = "preAttack";
+        buff.state = "endPlayCard";
+        buff.delState = null;
+        buff.delFun = "keep";
+
+        // buff.fun = (end, atkData, buff, role)=>{
+        //     atkData.atk += buff.num;
+        //     end();
+        // };
+        buff.fun = function (end, atkData, buff, role) {
+            if (isNaN(atkData.atk)) {
+                return end();
+            }
+            role.atkData.dmgArr.push({
+                atk: NaN,
+                def: this.num,
+                type: "def",
+                name: "atkDef",
+                myBuff: [],
+                enBuff: []
+            })
+            return end();
+        }
+    },
+
+    // 每次获得护甲时，都会对敌人造成一点魔法伤害
+    defAtk (roleNode, num = 1) {
+        let buff = roleNode.buffArr.add("defAtk", num);
+        // buff.state = "preAttack";
+        buff.state = "attack";
+        buff.delState = null;
+        buff.delFun = "keep";
+
+        // buff.fun = (end, atkData, buff, role)=>{
+        //     atkData.atk += buff.num;
+        //     end();
+        // };
+        buff.fun = function (end, atkData, buff, role, dmgData) {
+            if (isNaN(dmgData.def) || (dmgData.def <= 0)) {
+                return end();
+            }
+            // for (let i = buff.num - 1; i >= 0; i--) {
+            role.atkData.dmgArr.push({
+                atk: this.num,
+                def: NaN,
+                type: "ap",
+                name: "ap",
+                myBuff: [],
+                enBuff: []
+            })
+            // }
+            return end();
+        }
+    },
+
     liliang (roleNode, num = 1) {
         let buff = roleNode.buffArr.add("liliang", num);
         // buff.state = "preAttack";
@@ -220,17 +298,39 @@ cc.Class({
         }
     },
 
-    forget (roleNode, num = 1) {
-        let buff = roleNode.buffArr.add("_forget", num);
-        buff.state = "discard";
+    // 反伤，每次受到物理伤害，都会对敌人造成一点魔法伤害
+    backAtk (roleNode, num = 1) {
+        let buff = roleNode.buffArr.add("backAtk", num);
+        // buff.state = "preAttack";
+        buff.state = "hurt";
         buff.delState = null;
-        buff.delFun = "zero";
+        buff.delFun = "keep";
 
-        buff.fun = (end, atkData, buff, role)=>{
-            let card = atkData.playCardArr[0];
-            card.isInHand = true;
-            card.type = 1 - card.type;
-            end();
-        };
-    }
+        // buff.fun = (end, atkData, buff, role)=>{
+        //     atkData.atk += buff.num;
+        //     end();
+        // };
+        buff.fun = function (end, atkData, buff, getHurtRole, dmgData, attackRole) {
+            if (isNaN(dmgData.atk) || (dmgData.atk <= 0) || (dmgData.type !== "ad")) {
+                return end();
+            }
+            // attackRole.hp -= this.num;
+            attackRole.getHurt(this.num);
+            return end();
+        }
+    },
+
+    // forget (roleNode, num = 1) {
+    //     let buff = roleNode.buffArr.add("_forget", num);
+    //     buff.state = "discard";
+    //     buff.delState = null;
+    //     buff.delFun = "zero";
+
+    //     buff.fun = (end, atkData, buff, role)=>{
+    //         let card = atkData.playCardArr[0];
+    //         card.isInHand = true;
+    //         card.type = 1 - card.type;
+    //         end();
+    //     };
+    // }
 });

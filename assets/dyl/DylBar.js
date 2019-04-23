@@ -88,8 +88,8 @@ cc.Class({
         this.node.set = (value)=>{
             return this.setFun(value);
         }
-        this.node.change = (oldValue, newValue)=>{
-            return this.changeFun(oldValue, newValue);
+        this.node.change = (newValue, oldValue)=>{
+            return this.changeFun(newValue, oldValue);
         }
 
         if (this._barMaxLen === 0) {
@@ -202,7 +202,7 @@ cc.Class({
         }
     },
 
-    changeFun: function (oldValue, newValue) {
+    changeFun: function (newValue, oldValue) {
         // cc.log(oldValue, newValue);
         this.delActFun(); // 停止之前的动作
         // cc.log(this._hp, this._maxHp, this._barMaxLen);

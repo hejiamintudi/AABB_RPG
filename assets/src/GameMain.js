@@ -25,16 +25,16 @@ cc.Class({
                     "dealCard", "myPreTurn", "updateDataShow",  //出牌前
                 2,  "myGetAllCardData", "myGetAllCardNum", "touchCard", // 触摸操作
                     "getPlayCard", "myGetAtkData", "myMainSkill", // 获取卡牌数据
-                    "resetHandPos", "myPreAttack", "updateDataShow", "myAddMainDmg", "myPreAttackAct", 
+                    "resetHandPos", "myPreAttack", "updateDataShow", "myAddMainDmg", "endPlayCard", "myPreAttackAct", 
                     3, "myAttack_3", 
-                        "myEndAttack", "myResetHurtAct", "checkDie",
+                        "myEndAttack", "myAddBuff", "myResetHurtAct", "checkDie",
                         // "discardBuff", "discard", 
                         "myCheckNotCard_2",
                 "myEndTurn", // 我方结束回合后 
 
                 "enAddMainDmg", "enPreAttackAct", 
                     4, "enAttack_4", 
-                        "enEndAttack", "enResetHurtAct", "checkDie",
+                        "enEndAttack", "enAddBuff", "enResetHurtAct", "checkDie",
                 "enEndTurn",  
                 -1
         ];
@@ -311,11 +311,16 @@ cc.Class({
             atk: atkData.atk,
             def: atkData.def,
             name: "main",  //
-            type: "ad",   // 
+            type: isNaN(atkData.atk) ? "def" : "ad",   // 
             myBuff: atkData.myBuff,
             enBuff: atkData.enBuff
 
         };
+
+        // 已经复制给dmgArr了，现在的buff数组是算总数的
+        atkData.myBuff = [];
+        atkData.enBuff = [];
+
         let oriDmgArr = [...atkData.dmgArr, data];
         let dmgArr = [];
         // atkData.dmgArr.push(data);
@@ -400,6 +405,11 @@ cc.Class({
         // end();
     },
 
+    endPlayCard (end) {
+        this.runBuffArr(end, hjm._hero, "endPlayCard", hjm._hero.atkData);
+        end();
+    },
+
     enAddMainDmg (end) {
         return this.addMainDmg(end, hjm._en);
         // let atkData = hjm._en.atkData;
@@ -436,15 +446,15 @@ cc.Class({
     },
 
     myEndAttack (end) {
-        return this.endAttack(end);
+        return this.endAttack(end, hjm._hero);
     },
 
     enEndAttack (end) {
-        return this.endAttack(end);
+        return this.endAttack(end, hjm._en);
     },
 
-    endAttack (end) {
-        this.runBuffArr(end, hjm._hero, "endAttack", hjm._hero.atkData);
+    endAttack (end, role) {
+        this.runBuffArr(end, role, "endAttack", role.atkData);
         end();
     },
 
@@ -510,8 +520,8 @@ cc.Class({
     },
 
     die (role) {
-        tz(role).fadeTo(0.01, 0)();
-        hjm._die.add(role);
+        tz(role).fadeTo(1, 0)();
+        // hjm._die.add(role);
     },
 
     endTurn (end, role) {
@@ -541,23 +551,66 @@ cc.Class({
         if (isNaN(atk)) {
             cc.log("不是攻击类型");
         }
-        else if (getHurtRole.def > atk) { // 护甲足够，不用扣血
+        else {
             attackRole.atkData.isAtk = true;
-            getHurtRole.def -= atk;
-            this.getHurtAct(attackRole, getHurtRole);
+            getHurtRole.getHurt(atk, false);
         }
-        else { // 扣血，扣护甲
-            attackRole.atkData.isAtk = true;
-            getHurtRole.hp = getHurtRole.hp - atk + getHurtRole.def;
-            getHurtRole.def = 0;
-            this.getHurtAct(attackRole, getHurtRole);
-        }
+        // else if (getHurtRole.def > atk) { // 护甲足够，不用扣血
+        //     attackRole.atkData.isAtk = true;
+        //     getHurtRole.def -= atk;
+        //     this.getHurtAct(attackRole, getHurtRole);
+        // }
+        // else { // 扣血，扣护甲
+        //     attackRole.atkData.isAtk = true;
+        //     getHurtRole.hp = getHurtRole.hp - atk + getHurtRole.def;
+        //     getHurtRole.def = 0;
+        //     this.getHurtAct(attackRole, getHurtRole);
+        // }
+
 
         // buff处理
+        attackRole.atkData.myBuff.push(...myBuff);
+        attackRole.atkData.enBuff.push(...enBuff);
+
+        // 特效处理
+        if (isNaN(atk)) { // 非攻击状态
+            if (hjm._buff[name]) {
+                hjm._buff[name].add(cc.v2(getHurtRole));
+            }
+            else {
+                hjm._buff.defaultDef.add(cc.v2(getHurtRole));
+            }
+
+        }
+        else {             
+            if (hjm._buff[name]) {
+                hjm._buff[name].add(cc.v2(getHurtRole));
+            }
+            else {
+                hjm._buff.defaultAtk.add(cc.v2(getHurtRole));
+            }
+        }
+        // end();
+
+        // 延时处理
+        tz(0.1, end)();
+    },
+
+    myAddBuff (end) {
+        return this.addBuff(end, hjm._hero, hjm._en);
+    },
+
+    enAddBuff (end) {
+        return this.addBuff(end, hjm._en, hjm._hero);
+    },
+
+    addBuff (end, attackRole, getHurtRole) {
+        let {myBuff, enBuff} = attackRole.atkData;
         let Buff = this.node.getComponent("Buff");
         for (let i = 0; i < myBuff.length; i++) {
             // end(Buff, myBuff[i], attackRole, 1);
             if (typeof myBuff[i] === "string") {
+                // cc.log(Buff, myBuff[i], Buff[myBuff[i]]);
                 Buff[myBuff[i]](attackRole);
             }
             else {
@@ -576,29 +629,7 @@ cc.Class({
             // Buff[enBuff[i]](getHurtRole);
         }
         this.updateDataShow();
-
-        // 特效处理
-        if (isNaN(atk)) { // 非攻击状态
-            if (hjm._buff[name]) {
-                hjm._buff[name].add(cc.v2(getHurtRole), atk);
-            }
-            else {
-                hjm._buff.defaultDef.add(cc.v2(getHurtRole), atk);
-            }
-
-        }
-        else {             
-            if (hjm._buff[name]) {
-                hjm._buff[name].add(cc.v2(getHurtRole), -showAtk);
-            }
-            else {
-                hjm._buff.defaultAtk.add(cc.v2(getHurtRole), -showAtk);
-            }
-        }
-        // end();
-
-        // 延时处理
-        tz(0.1, end)();
+        end();
     },
 
     attack_getEndData(end, oriData, buffArr, isChangeOriData) {
@@ -621,7 +652,7 @@ cc.Class({
         // }
         this.runBuffArr(end, attackRole, "attack", atkData, dmgData);
         end(this, "attack_getEndData", dmgData, attackRole.buffArr, true);
-        this.runBuffArr(end, getHurtRole, "hurt", atkData, dmgData);
+        this.runBuffArr(end, getHurtRole, "hurt", atkData, dmgData, attackRole);
         end(this, "oneAttack", attackRole, getHurtRole, dmgData);
         // cc.log("attack", readNum);
         end(readNum);
@@ -742,9 +773,9 @@ cc.Class({
             // cc.log("resetHurtAct false");
             getHurtRole.tz = tz(getHurtRole)
                                 ._moveTo(recoverTime, getHurtRole.oriPos)
-                                  .rotateTo(recoverTime, 0)
+                                  .rotateTo(getHurtRole.en, recoverTime, 0)
                                   .moveTo(attackRole, recoverTime, attackRole.oriPos)
-                                ._rotateTo(attackRole, recoverTime, 0)
+                                ._rotateTo(attackRole.en, recoverTime, 0)
                                 (end)();
             return;
         }
@@ -1039,7 +1070,7 @@ cc.Class({
         // 向右下角飞去
         let endPos = cc.v2(1000, -600);
         for (let i = 0; i < discardArr.length; i++) {
-            let card = discardArr[i];
+            let card = discardArr[i];  
             ai.graveyard.push(card);
             // act.moveTo(card, this.dealCardTime, endPos);
             act.fadeTo(card, this.dealCardTime, 0);

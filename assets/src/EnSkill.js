@@ -62,12 +62,14 @@ cc.Class({
 
 //返回攻击数据对象 [atk, def, times, [meBuff], [enBuff]]
 // plan 有攻击（atk） 防守（def） 强化（add） 负面（sub） 不明（what） 逃跑（run）
+// round 是从0开始的
     en1 (en, round) {
-    	if (round === 1) {
-    		return [0, 10, 1, [], []];
+        // cc.log("round", round);
+    	if (round === 0) {
+    		return [NaN, 10, 1, ["backAtk"], []];
     	}
     	else {
-    		return [1, 0, 5, [], []];
+    		return [1, NaN, 5, [], []];
     	}
     	// en.skill = fun1;
     },
