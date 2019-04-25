@@ -1,3 +1,5 @@
+"use strict";
+
 var getNowTime = function () {
     let data = new Date();
     return [data.getSeconds(), data.getMilliseconds()];

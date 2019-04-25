@@ -16,6 +16,10 @@ cc.Class({
         // 新建buffNode 显示版
         if (name[0] !== "_") {
             buffNode = role.buff.add();
+            buffNode.enName = name;
+
+            hjm._main.button.push(buffNode); // 
+
             buffNode.name = "buff";
             // cc.log("hjm", name, buffNode.name);
             hjm[name] = buffNode;

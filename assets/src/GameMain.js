@@ -48,6 +48,22 @@ cc.Class({
         dyl.process(this, arr, true);
     },
 
+    buttonOn (buff) {
+        hjm._buffShow.active = true;
+        this.showBuff(buff);
+    },
+
+    buttonEnd (buff) {
+        hjm._buffShow.active = false;
+    },
+
+    showBuff (buff) {
+        let data = {};
+        dyl.data("buff." +  buff.enName, data);
+        hjm._buffShow.lab = data.chName + ": " + data.chLab;
+        hjm._buffShow.x = buff.x + buff.parent.x + buff.parent.parent.x;
+    },
+
     preCombatAct (end) {
         hjm._main.opacity = 0;
         let dis = 800;

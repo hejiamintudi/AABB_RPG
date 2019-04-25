@@ -276,8 +276,26 @@ cc.Class({
     //     }
     // },
 
+    // 加了一个button模式
+        // 对应着buttonOn(node) buttonUp(node) 
+        // button = arr:需要被点击的节点数组
+        // button模式最高优先级，如果没有被点击到button才使用其他触摸
     setTouch: function () {
         let node = this.node;
+        let dylButtonNode = null;
+        node.button = node.button ? node.button : [];
+        let findButtonFun = function (worldPos, nodeArr) {
+            for (let i = 0; i < nodeArr.length; i++) {
+                if (!nodeArr[i].active) {
+                    continue;
+                }
+                let rect = nodeArr[i].getBoundingBoxToWorld();
+                if (rect.contains(worldPos)) {
+                    return nodeArr[i];
+                }
+            }
+            return null;
+        }
 
         let dylTouchState = this.node.touch;
         let dylTouchArgArr = [];
@@ -306,37 +324,41 @@ cc.Class({
         let nowTouchState = this.node.touch;
 
         let fun = function (event){
-            let pos = event.getLocation();
-            pos = cc.v2(node.convertToNodeSpace(pos));
+            let eventPos = event.getLocation();
+            let pos = cc.v2(node.convertToNodeSpace(eventPos));
             let size = node.getContentSize();
             let [w, h] = [size.width, size.height];
             [w, h] = [w / 2, h / 2];
             pos.subSelf(cc.v2(w, h));
 
-            pos.in = function () { //判断当前节点是否在node里面
-                let {x, y} = this;
-                let checkIn = function (node) {
-                    if (!node) {
-                        return null;
-                    }
-                    node = node.node ? node.node : node;
-                    let [nx, ny] = [node.x, node.y];
-                    let size = node.getContentSize();
-                    let [w, h] = [size.width, size.height];
-                    [w, h] = [w / 2, h / 2];
-                    w = Math.abs(node.scaleX * w);
-                    h = Math.abs(node.scaleY * h);
-                    // cc.log(x, y, nx, ny, w, h);
-                    return (x >= (nx - w) && x < (nx + w) && y >= (ny - h) && y < (ny + h));
-                };
-                let len = arguments.length;
-                for (let i = 0; i < len; i++) {
-                    if (checkIn(arguments[i])) {
-                        return arguments[i];
-                    }
-                }
-                return null;
-            };
+            pos.in = function (...nodeArr) {
+                return findButtonFun(eventPos, nodeArr);
+            }
+
+            // pos.in = function () { //判断当前节点是否在node里面
+            //     let {x, y} = this;
+            //     let checkIn = function (node) {
+            //         if (!node) {
+            //             return null;
+            //         }
+            //         node = node.node ? node.node : node;
+            //         let [nx, ny] = [node.x, node.y];
+            //         let size = node.getContentSize();
+            //         let [w, h] = [size.width, size.height];
+            //         [w, h] = [w / 2, h / 2];
+            //         w = Math.abs(node.scaleX * w);
+            //         h = Math.abs(node.scaleY * h);
+            //         // cc.log(x, y, nx, ny, w, h);
+            //         return (x >= (nx - w) && x < (nx + w) && y >= (ny - h) && y < (ny + h));
+            //     };
+            //     let len = arguments.length;
+            //     for (let i = 0; i < len; i++) {
+            //         if (checkIn(arguments[i])) {
+            //             return arguments[i];
+            //         }
+            //     }
+            //     return null;
+            // };
             return pos;
         };
 
@@ -357,6 +379,14 @@ cc.Class({
         let isOnLong = false; // 是否触发了长按操作
  
         this.node.on("touchstart", function (event) {
+            dylButtonNode = findButtonFun(event.getLocation(), node.button);
+            if (dylButtonNode) {
+                if (js.buttonOn) {
+                    js.buttonOn(dylButtonNode);
+                }
+                return true;
+            }
+
             if (!node.touch) {
                 data = null;
                 return null;
@@ -407,6 +437,10 @@ cc.Class({
         })
 
         this.node.on ("touchmove", function (event) {
+            if (dylButtonNode) {
+                return true;
+            }
+
             if (!data) {
                 return null;
             }
@@ -432,6 +466,16 @@ cc.Class({
         }, this);
 
         this.node.on ("touchend", function (event) {
+            if (dylButtonNode) {
+                if (js.buttonEnd) {
+                    js.buttonEnd(dylButtonNode);
+                }
+                else if (js.buttonUp) {
+                    js.buttonUp(dylButtonNode);
+                }
+                return true;
+            }
+
             longId++;
             if (!data) {
                 return null;
@@ -468,6 +512,16 @@ cc.Class({
         }, this);
 
         this.node.on ("touchcancel", function (event) {
+            if (dylButtonNode) {
+                if (js.buttonEnd) {
+                    js.buttonEnd(dylButtonNode);
+                }
+                else if (js.buttonOut) {
+                    js.buttonOut(dylButtonNode);
+                }
+                return true;
+            }
+
             longId++;
             if (!data) {
                 return null;
