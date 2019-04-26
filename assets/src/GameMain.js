@@ -61,7 +61,7 @@ cc.Class({
     showBuff (buff) {
         let data = {};
         dyl.data("buff." +  buff.enName, data);
-        hjm._buffShow.lab = data.chName + ": " + data.chLab;
+        hjm._buffShow.lab = (data.chName + ": " + data.chLab).replace("x", " " + String(buff.buffData.num) + " ");
         hjm._buffShow.x = buff.x + buff.parent.x + buff.parent.parent.x;
     },
 

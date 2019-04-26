@@ -30,6 +30,7 @@ cc.Class({
             role: role,
             buffNode: buffNode
         }
+        buffNode.buffData = buff;
         if (name[0] !== "_") {
             dyl.notify(buff, "num", (newData, oldData)=>{
                 buffNode.num = newData;
