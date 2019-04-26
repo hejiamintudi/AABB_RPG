@@ -1049,6 +1049,43 @@ cc.Class({
         }
     },
 
+    addCard (name) {
+        let card = hjm._cardLayer.add();
+        card.cardName = name;
+        card.x = 2000;
+        hjm[name] = card.card;
+        let {mainSkill, friendSkill} = dyl.data("card." + card.cardName, card);
+        let Skill = this.node.getComponent("Skill");
+        Skill.addMainSkill(card, mainSkill);
+        Skill.addFriendSkill(card, friendSkill);
+
+        this.setCardTypeFun(card);
+        return card;
+    },
+
+    setCardTypeFun (card) {
+        // 查看这个card是否曾经被创建过
+        if (card.hasCreate) {
+            return;
+        }
+        card.hasCreate = true;
+        let fun = (type)=>{
+            if (type === 0) {
+                // card.cardColor = cc.color(204, 51, 51);
+                card.cardBg = false;
+            }
+            else if (type === 1) {
+                // card.cardColor = cc.color(51, 153, 255);
+                card.cardBg = true;
+            }
+            else {
+                return cc.error("setCardType 类型有错，不是 0 或 1", type);
+            }
+            return type;
+        }
+        dyl.notify(card, "type", fun);
+    },
+
     dealCard (end) { // 发牌
         this.round++; // 下一轮
 
@@ -1090,7 +1127,7 @@ cc.Class({
         let endPos = cc.v2(1000, -600);
         for (let i = 0; i < discardArr.length; i++) {
             let card = discardArr[i];  
-            ai.graveyard.push(card);
+            // ai.graveyard.push(card);
             // act.moveTo(card, this.dealCardTime, endPos);
             act.fadeTo(card, this.dealCardTime, 0);
 
@@ -1100,8 +1137,9 @@ cc.Class({
             for (let i = 0; i < discardArr.length; i++) {
                 discardArr[i].y = this.cardY;
                 discardArr[i].x = 2000;
-                discardArr[i].active = false;
-                discardArr[i].opacity = 255;
+                // discardArr[i].active = false;
+                // discardArr[i].opacity = 255;
+                discardArr[i].del();
             }
         }
        
@@ -1328,26 +1366,36 @@ cc.Class({
     },
 
     getHand (n) { //获取手牌节点
-        if (ai.library.length >= n) {
-            for (let i = 0; i < n; i++) {
-                let card = ai.library.pop();
-                card.y = this.cardY;
-                card.x = 2000;
-                // this.setCardType(card, dyl.rand(2));
-                card.type = dyl.rand(2);
-                card.isInHand = true;
-                ai.hand.push(card);
-            }
-        }  
-        else {
-            n -= ai.library.length;
-            this.getHand(ai.library.length);
-            this.shuffleCard();
-            if (n > ai.library.length) {
-                n = ai.library.length;
-            }
-            this.getHand(n);
+        while (n--) {
+            let card = this.addCard(ai.cardNameArr[dyl.rand(ai.cardNameArr.length)]);
+            card.y = this.cardY;
+            card.x = 2000;
+            card.type = dyl.rand(2);
+            card.isInHand = true;
+            ai.hand.push(card);
         }
+        return;
+
+        // if (ai.library.length >= n) {
+        //     for (let i = 0; i < n; i++) {
+        //         let card = ai.library.pop();
+        //         card.y = this.cardY;
+        //         card.x = 2000;
+        //         // this.setCardType(card, dyl.rand(2));
+        //         card.type = dyl.rand(2);
+        //         card.isInHand = true;
+        //         ai.hand.push(card);
+        //     }
+        // }  
+        // else {
+        //     n -= ai.library.length;
+        //     this.getHand(ai.library.length);
+        //     this.shuffleCard();
+        //     if (n > ai.library.length) {
+        //         n = ai.library.length;
+        //     }
+        //     this.getHand(n);
+        // }
     },
 
     shuffleCard () { //洗牌, 弃牌堆的牌回到牌库里

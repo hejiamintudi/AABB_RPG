@@ -264,7 +264,7 @@ window.initDylFun = function (cryptoJS) {
         if (typeof this.__randNum !== "number") {
             this.__randNum = 1;
         }
-        var maxNum = 9987617;
+        var maxNum = 9987618;
         __randNum = (59341 * __randNum + 6541) % maxNum;
         var randNum = __randNum / maxNum;
         if (num) {

@@ -6,20 +6,20 @@ cc.Class({
     },
 
     onLoad () {
-        dyl.setRand(9213);
+        dyl.setRand(651);
         // dyl.notify(ai, "drawCard", (newValue, oldValue)=>{
         //     cc.warn("drawCard", oldValue, newValue);
         //     return newValue;
         // })
-    	this.cardNameArr = [
+    	ai.cardNameArr = [
     						"jian", 
-							"dun",
-                            "jian", 
-                            "jian",
-                            "jian", 
-                            "dun",
-                            "dun", 
-                            "dun"
+							"dun"
+                            // "jian", 
+                            // "jian",
+                            // "jian", 
+                            // "dun",
+                            // "dun", 
+                            // "dun"
 		];
 
 		// this.enNameArr = [
@@ -264,22 +264,25 @@ cc.Class({
     // },
 
     addCardArr (end) {
-    	let cardNameArr = this.cardNameArr;
-    	cardNameArr.sort(()=>(dyl.rand()-0.5));
-    	let cardArr = [];
-    	let cardLayer = hjm._cardLayer;
-    	for (let i = cardNameArr.length - 1; i >= 0; i--) {
-    		let card = cardLayer.add();
-            dyl.card = card;
-            // cc.log("card", card.card, cardNameArr[i]);
-    		hjm[cardNameArr[i]] = card.card; //动态加载图片
-    		card.cardName = cardNameArr[i];
-    		this.initCard(card);
-    		cardArr.push(card);
-    	}
-    	cardArr.sort(()=>(dyl.rand() - 0.5));
-    	ai.library = cardArr; //牌库
     	ai.hand = []; //手牌
+        return end();
+
+        // 下面没有必要了，改为gameMain里面实现
+        let cardNameArr = this.cardNameArr;
+        cardNameArr.sort(()=>(dyl.rand()-0.5));
+        let cardArr = [];
+        let cardLayer = hjm._cardLayer;
+        for (let i = cardNameArr.length - 1; i >= 0; i--) {
+            let card = cardLayer.add();
+            // dyl.card = card;
+            // cc.log("card", card.card, cardNameArr[i]);
+            hjm[cardNameArr[i]] = card.card; //动态加载图片
+            card.cardName = cardNameArr[i];
+            this.initCard(card);
+            cardArr.push(card);
+        }
+        cardArr.sort(()=>(dyl.rand() - 0.5));
+        ai.library = cardArr; //牌库
     	ai.graveyard = []; //弃牌堆
     	end();
     },
