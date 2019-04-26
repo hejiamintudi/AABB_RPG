@@ -7,7 +7,7 @@ cc.Class({
     },
 // library, hand, graveyard
     onLoad () {
-        dyl.button(this, hjm._endGame);
+        // dyl.button(this, hjm._endGame);
         this._touchId = 0; //用来区别每次触摸
     },
 
@@ -537,6 +537,7 @@ cc.Class({
     },
 
     die (role, isWin) {
+        this.node.touch = "endGame";
         tz(role).fadeTo(0.3, 0)(0.1)(()=>{
             hjm._endGame.active = true;
             if (!isWin) {
@@ -549,7 +550,7 @@ cc.Class({
                 hjm._endGame.Coin = cc.v2(0, 0);
                 hjm._endGame.Card = cc.v2(0, -130);
                 hjm._endGame.next = cc.v2(0, -260);
-                hjm[ai.winCard] = hjm._endGame.card;
+                hjm[ai.winCard] = hjm._endGame.card.card;
             }
             else {
                 hjm._endGame.Card = false;
@@ -1076,6 +1077,43 @@ cc.Class({
         }
     },
 
+    endGameLongOn (p) {
+        let card = hjm._endGame.card
+        if (p.in(card)) {
+            this.showEndCardData(card);
+        }
+        return true;
+    },
+
+    endGameLongEnd (p) {
+        hjm._endCardData.active = false;
+        return false;
+    },
+
+    endGameEnd (p) {
+        let touchButton = function (buttonName, nullName) {
+            if (p.in(hjm._endGame[buttonName])) {
+                hjm._endGame[nullName] = false;
+                return true;
+            }
+            return false;
+        }
+
+        if (touchButton("coinButton", "Coin")) {
+            this.coinButton();
+            return false;
+        }
+        if (touchButton("cardButton", "Card")) {
+            this.cardButton();
+            return false;
+        }
+        // if (touchButton("next")) {
+        //     this.cardButton();
+        //     return false;
+        // }
+
+    },
+
     addCard (name) {
         let card = hjm._cardLayer.add();
         card.cardName = name;
@@ -1201,6 +1239,114 @@ cc.Class({
     copySpr (node1, node2) {
         let spr = node2.getComponent(cc.Sprite).spriteFrame;
         node1.getComponent(cc.Sprite).spriteFrame = spr;
+    },
+
+    showEndCardData (card) {
+        let playColor = cc.color(233, 129, 4);
+        let stopColor = cc.color(110, 110, 110);
+        // let card = ai.hand[id];
+
+        let showNode = hjm._endCardData;
+        showNode.active = true;
+
+        let cardType = 0;
+
+        // hjm[card.cardName] = showNode.card;
+        this.copySpr(showNode.card, card.card);
+        // showNode.card = (cardType === 0) ? cc.color(204, 51, 51) : cc.color(51, 153, 255);
+        
+        showNode.cardBg = (cardType === 1);
+
+        showNode.power = false; // 这个不显示
+
+        let data = dyl.data("card." + ai.winCard, showNode);
+        // cc.log("showNode atk", showNode.atk);
+        // if (showNode.atk < 0) {
+        // showNode.Atk = showNode.atk > 0; 
+        let atkData = {
+            atk: showNode.atk < 0 ? NaN : showNode.atk,
+            def: showNode.def < 0 ? NaN : showNode.def,
+            type: "main"
+        };
+        let endData = atkData;
+        let fun = (name)=>{
+            if (isNaN(atkData[name])) {
+                showNode[name + "Lab"] = stopColor;
+                showNode[name] = false;
+                showNode[name + "AddLab"] = false;
+            }
+            else {
+                showNode[name + "Lab"] = playColor;
+                showNode[name] = true;
+                showNode[name + "AddLab"] = true;   
+                let addNum = endData[name] - atkData[name];
+                // cc.log("addNum", name, endData[name], atkData[name], addNum);
+                showNode[name] = atkData[name];
+                let str = "";
+                if (addNum > 0) {
+                    showNode[name + "AddLab"] = cc.color(0, 255, 0);
+                    str = "(+" + String(addNum) + ")";
+                }
+                else if (addNum < 0) {
+                    showNode[name + "AddLab"] = cc.color(255, 0, 0);
+                    str = "(" + String(addNum) + ")";
+                }
+                showNode[name + "AddLab"] = str;
+            }
+
+        }
+        fun("atk");
+        fun("def");
+        // if (showNode.atk > 0) {
+        //     showNode.atkLab = playColor;
+        //     showNode.atk = true;
+        // }
+        // else {
+        //     showNode.atkLab = stopColor;
+        //     showNode.atk = false;
+        // }
+
+        // if (isNaN(showNode.def)) {
+        //     showNode.def = 0;
+        // }
+
+        // if (showNode.def > 0) {
+        //     showNode.defLab = playColor;
+        //     showNode.def = true;
+        // }
+        // else {
+        //     showNode.defLab = stopColor;
+        //     showNode.def = false;
+        // }
+
+        // if (showNode.skillNum <= showNode.power) {
+            showNode.mainSkillLab = playColor;
+        // }
+        // else {
+        //     showNode.mainSkillLab = stopColor;
+        // }
+
+        let y = 0;
+        let d = 230;
+        if (data.mainSkill) {
+            showNode.mainSkill = true;
+            showNode.mainSkill = cc.v2(NaN, y);
+            y -= d;
+        }
+        else {
+            showNode.mainSkill = false;
+            // showNode.mainSkill = cc.v2(true, y);   
+        }
+
+        if (data.friendSkill) {
+            showNode.friendSkill = true;
+            showNode.friendSkill = cc.v2(NaN, y);
+            y -= d;
+        }
+        else {
+            showNode.friendSkill = false;
+            // showNode.mainSkill = cc.v2(true, y);   
+        }
     },
 
     showCardData () {
