@@ -7,6 +7,7 @@ cc.Class({
     },
 // library, hand, graveyard
     onLoad () {
+        dyl.button(this, hjm._endGame);
         this._touchId = 0; //用来区别每次触摸
     },
 
@@ -532,15 +533,41 @@ cc.Class({
         let isWin = endStr === "win";
         let winRole = isWin ? hjm._hero : hjm._en;
         let dieRole = isWin ? hjm._en : hjm._hero;
-        this.die(dieRole);
+        this.die(dieRole, isWin);
     },
 
-    die (role) {
+    die (role, isWin) {
         tz(role).fadeTo(0.3, 0)(0.1)(()=>{
             hjm._endGame.active = true;
-            hjm._endGame.coinNum = 5;
+            if (!isWin) {
+                hjm._endGame.lose = true;
+                return;
+            }
+            hjm._endGame.coin = 5;
+            if (ai.winCard) {
+                hjm._endGame.Card = true;
+                hjm._endGame.Coin = cc.v2(0, 0);
+                hjm._endGame.Card = cc.v2(0, -130);
+                hjm._endGame.next = cc.v2(0, -260);
+                hjm[ai.winCard] = hjm._endGame.card;
+            }
+            else {
+                hjm._endGame.Card = false;
+                hjm._endGame.Coin = cc.v2(0, -65);
+                hjm._endGame.next = cc.v2(0, -195);
+            }
+
         })();
         // hjm._die.add(role);
+    },
+
+    coinButton () {
+        ai.coin += hjm._endGame.coin;
+        cc.log("获得金币", hjm._endGame.coin, "金币总数", ai.coin);
+    },
+
+    cardButton () {
+        cc.log("获得卡片");
     },
 
     endTurn (end, role) {

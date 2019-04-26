@@ -1033,7 +1033,8 @@ window.initDylFun = function (cryptoJS) {
         return delFun;
     };
 
-    dyl.button = function (js) {
+    dyl.button = function (js, jsNode) {
+        jsNode = jsNode ? jsNode : js.node;
         var setButton = function setButton(name, node) {
             var _scale = node.getScale();
             node.on('touchstart', function (event) {
@@ -1047,11 +1048,15 @@ window.initDylFun = function (cryptoJS) {
                 node.setScale(_scale);
             });
         };
-        var arr = js.node.getChildren();
+        var arr = jsNode.getChildren();
         for (var i = arr.length - 1; i >= 0; i--) {
             var name = arr[i].name;
-            if (typeof js[name] === "function") {
-                setButton(name, arr[i]);
+            var nameArr = name.split("_");
+            for (var j = nameArr.length - 1; j >= 0; j--) {
+                name = nameArr[j];
+                if (typeof js[name] === "function") {
+                    setButton(name, arr[i]);
+                }
             }
         }
     };

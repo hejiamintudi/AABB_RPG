@@ -11,6 +11,8 @@ cc.Class({
         //     cc.warn("drawCard", oldValue, newValue);
         //     return newValue;
         // })
+        ai.coin = 0;
+        ai.winCard = "jian";
     	ai.cardNameArr = [
     						"jian", 
 							"dun"
