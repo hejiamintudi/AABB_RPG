@@ -536,7 +536,10 @@ cc.Class({
     },
 
     die (role) {
-        tz(role).fadeTo(1, 0)();
+        tz(role).fadeTo(0.3, 0)(0.1)(()=>{
+            hjm._endGame.active = true;
+            hjm._endGame.coinNum = 5;
+        })();
         // hjm._die.add(role);
     },
 
