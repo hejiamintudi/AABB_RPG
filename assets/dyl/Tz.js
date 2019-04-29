@@ -351,30 +351,34 @@ window.tz = function (node, ...argArr) {
         			//////////////////////////// (下面这个缓冲)
         			let ease = null;
         			let easeType = arr[arr.length - 1];
-        			if (easeType === "add") {
+        			if ((typeof easeType === "object") && (typeof easeType.easing === "function") && (typeof easeType.reverse === "function")) {
         				arr.pop();
-        				ease = cc.easeIn(2.0);
+        				ease = easeType;
         			}
-        			else if (easeType === "sub") {
-        				arr.pop();
-        				ease = cc.easeOut(2.0);
-        			}
-        			else if (easeType === "addSub") {
-        				arr.pop();
-        				ease = cc.easeInOut(2.0);
-        			}
-        			else if (easeType === "backAdd") {
-        				arr.pop();
-        				ease = cc.easeBackIn();
-        			}
-        			else if (easeType === "subBack") {
-        				arr.pop();
-        				ease = cc.easeBackOut();
-        			}
-        			else if (easeType === "backAddSubBack") {
-        				arr.pop();
-        				ease = cc.easeBackInOut();
-        			}
+        			// if (easeType === "add") {
+        			// 	arr.pop();
+        			// 	ease = cc.easeIn(2.0);
+        			// }
+        			// else if (easeType === "sub") {
+        			// 	arr.pop();
+        			// 	ease = cc.easeOut(2.0);
+        			// }
+        			// else if (easeType === "addSub") {
+        			// 	arr.pop();
+        			// 	ease = cc.easeInOut(2.0);
+        			// }
+        			// else if (easeType === "backAdd") {
+        			// 	arr.pop();
+        			// 	ease = cc.easeBackIn();
+        			// }
+        			// else if (easeType === "subBack") {
+        			// 	arr.pop();
+        			// 	ease = cc.easeBackOut();
+        			// }
+        			// else if (easeType === "backAddSubBack") {
+        			// 	arr.pop();
+        			// 	ease = cc.easeBackInOut();
+        			// }
         			/////////////////////////////////////////
 
         			act = cc[actName](...arr);
