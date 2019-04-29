@@ -7,7 +7,7 @@ cc.Class({
     },
 // library, hand, graveyard
     onLoad () {
-        // dyl.button(this, hjm._endGame);
+        dyl.button(this, hjm._endGame);
         this._touchId = 0; //用来区别每次触摸
     },
 
@@ -538,6 +538,7 @@ cc.Class({
 
     die (role, isWin) {
         this.node.touch = "endGame";
+        // this.node.bu
         tz(role).fadeTo(0.3, 0)(0.1)(()=>{
             hjm._endGame.active = true;
             if (!isWin) {
@@ -547,28 +548,34 @@ cc.Class({
             hjm._endGame.coin = 5;
             if (ai.winCard) {
                 hjm._endGame.Card = true;
-                hjm._endGame.Coin = cc.v2(0, 0);
-                hjm._endGame.Card = cc.v2(0, -130);
-                hjm._endGame.next = cc.v2(0, -260);
+                hjm._endGame.Coin = cc.v2(true, 0);
+                hjm._endGame.Card = cc.v2(true, -130);
+                hjm._endGame.next = cc.v2(true, -260);
                 hjm[ai.winCard] = hjm._endGame.card.card;
             }
             else {
                 hjm._endGame.Card = false;
-                hjm._endGame.Coin = cc.v2(0, -65);
-                hjm._endGame.next = cc.v2(0, -195);
+                hjm._endGame.Coin = cc.v2(true, -65);
+                hjm._endGame.next = cc.v2(true, -195);
             }
 
         })();
         // hjm._die.add(role);
     },
 
-    coinButton () {
-        ai.coin += hjm._endGame.coin;
-        cc.log("获得金币", hjm._endGame.coin, "金币总数", ai.coin);
-    },
+    // coinButton () {
+    //     ai.coin += hjm._endGame.coin;
+    //     cc.log("获得金币", hjm._endGame.coin, "金币总数", ai.coin);
+    // },
 
-    cardButton () {
-        cc.log("获得卡片");
+    // cardButton () {
+    //     cc.log("获得卡片");
+    // },
+
+    cardShowButton () {
+        hjm._endCardData.active = true;
+        hjm._endGame.cardShowButton = false;
+        this.showEndCardData(hjm._endGame.card);
     },
 
     endTurn (end, role) {
@@ -1077,42 +1084,50 @@ cc.Class({
         }
     },
 
-    endGameLongOn (p) {
-        let card = hjm._endGame.card
-        if (p.in(card)) {
-            this.showEndCardData(card);
+    endGameOn (p) {
+        if (p.in(hjm._endCardData)) {
+            // cc.log("endGameOn");
+            hjm._endGame.cardShowButton = true;
+            hjm._endCardData.active = false;
         }
-        return true;
     },
 
-    endGameLongEnd (p) {
-        hjm._endCardData.active = false;
-        return false;
-    },
+    // endGameLongOn (p) {
+    //     let card = hjm._endGame.card
+    //     if (p.in(card)) {
+    //         this.showEndCardData(card);
+    //     }
+    //     return true;
+    // },
 
-    endGameEnd (p) {
-        let touchButton = function (buttonName, nullName) {
-            if (p.in(hjm._endGame[buttonName])) {
-                hjm._endGame[nullName] = false;
-                return true;
-            }
-            return false;
-        }
+    // endGameLongEnd (p) {
+    //     hjm._endCardData.active = false;
+    //     return false;
+    // },
 
-        if (touchButton("coinButton", "Coin")) {
-            this.coinButton();
-            return false;
-        }
-        if (touchButton("cardButton", "Card")) {
-            this.cardButton();
-            return false;
-        }
-        // if (touchButton("next")) {
-        //     this.cardButton();
-        //     return false;
-        // }
+    // endGameEnd (p) {
+    //     let touchButton = function (buttonName, nullName) {
+    //         if (p.in(hjm._endGame[buttonName])) {
+    //             hjm._endGame[nullName] = false;
+    //             return true;
+    //         }
+    //         return false;
+    //     }
 
-    },
+    //     if (touchButton("coinButton", "Coin")) {
+    //         this.coinButton();
+    //         return false;
+    //     }
+    //     if (touchButton("cardButton", "Card")) {
+    //         this.cardButton();
+    //         return false;
+    //     }
+    //     // if (touchButton("next")) {
+    //     //     this.cardButton();
+    //     //     return false;
+    //     // }
+
+    // },
 
     addCard (name) {
         let card = hjm._cardLayer.add();
@@ -1330,7 +1345,7 @@ cc.Class({
         let d = 230;
         if (data.mainSkill) {
             showNode.mainSkill = true;
-            showNode.mainSkill = cc.v2(NaN, y);
+            showNode.mainSkill = cc.v2(true, y);
             y -= d;
         }
         else {
@@ -1340,7 +1355,7 @@ cc.Class({
 
         if (data.friendSkill) {
             showNode.friendSkill = true;
-            showNode.friendSkill = cc.v2(NaN, y);
+            showNode.friendSkill = cc.v2(true, y);
             y -= d;
         }
         else {
@@ -1442,7 +1457,7 @@ cc.Class({
         let d = 230;
         if (data.mainSkill) {
             showNode.mainSkill = true;
-            showNode.mainSkill = cc.v2(NaN, y);
+            showNode.mainSkill = cc.v2(true, y);
             y -= d;
         }
         else {
@@ -1452,7 +1467,7 @@ cc.Class({
 
         if (data.friendSkill) {
             showNode.friendSkill = true;
-            showNode.friendSkill = cc.v2(NaN, y);
+            showNode.friendSkill = cc.v2(true, y);
             y -= d;
         }
         else {

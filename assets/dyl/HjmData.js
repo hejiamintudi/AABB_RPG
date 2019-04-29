@@ -1,6 +1,6 @@
 "use strict";
 window.DylIsFinal = false; // 是否最终发布版
-// dylIsFinal = true;
+// DylIsFinal = true;
 if (DylIsFinal) {
 	cc.log = function() {};
 }

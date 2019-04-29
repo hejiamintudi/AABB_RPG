@@ -203,11 +203,13 @@ cc.Class({
                     }
                     return;
                 }
-                else if (cc.js.getClassName(data) === "cc.Vec2") {
-                    if (isNaN(data.x)) {
+                // else if (cc.js.getClassName(data) === "cc.Vec2") {
+                else if ((typeof data === "object") && (data.x !== undefined) && (data.y !== undefined)) {
+                    if (data.x === true) {
+                        // cc.log("NaN x");
                         data.x = dataArr[0].x;
                     }
-                    if (isNaN(data.y)) {
+                    if (data.y === true) {
                         data.y = dataArr[0].y;
                     }
                     let p = data.sub(dataArr[0]); // 偏移量
