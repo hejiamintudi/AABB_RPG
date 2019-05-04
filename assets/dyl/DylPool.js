@@ -268,7 +268,7 @@ cc.Class({
                     node = cc.instantiate(pool[0]);
                     // testThis.logPath(node);
                     node.parent = this;
-                    cc.log(node.name, node.parent.name);
+                    // cc.log(node.name, node.parent.name);
 
                     node.del = function () {
                         this.active = false;

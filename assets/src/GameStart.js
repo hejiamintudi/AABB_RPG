@@ -4,6 +4,8 @@ cc.Class({
     },
 
     start () {
+        this.replyArr = [];
+        this.node.button = [hjm._button];
         let arr = ["initCard", "pushCard", "resetPos", "autoChoose"];
         dyl.process(this, arr);
     },
@@ -11,6 +13,7 @@ cc.Class({
     pushCard (end) {
         // this.initCard();
         this.hand = [];
+        cc.hand = this.hand;
         for (let i = 0; i < 3; i++) {
             let card = this.addCard();
             this.hand.push(card);
@@ -26,7 +29,16 @@ cc.Class({
         end();
     },
 
+    chooseCardOn (p) {
+        let card = p.in(...this.hand);
+        if (!card) {
+            return;
+        }
+        this.choose(card);
+    },
+
     choose (card) {
+        hjm._choose.active = true;
         hjm._choose.setPosition(cc.v2(card).add(card.parent));
         let data = card.npcData;
         let dataId = data.id;
@@ -57,10 +69,63 @@ cc.Class({
                         })();
     },
 
+    buttonOn (node) {
+        cc.log("buttonOn", this.node.touch);
+        this[this.node.touch + "Button"](node);
+    },
+
+    talkButton (replyNode) {
+        cc.log(replyNode.lab);
+    },
+
+    chooseCardButton (button) {
+        hjm._choose.active = false;
+        this.node.touch = "talk";
+        this.node.button = this.replyArr;
+        let arr = ["leaveMain", "comeTalk"];
+        dyl.process(this, arr);
+    },
+
+    // 离开主面板，进入其他版块的模式（聊天，shop等等）
+    leaveMain (end) { 
+        hjm._button.active = false;
+        let card = hjm._who.pool[0];
+        tz().moveTo(card, 0.1, -1000, card.y)
+            (()=>{
+                card.x = 1000;
+                card.del();
+            })
+            ((cb)=>{
+                this.resetPos(cb, -1);
+                return true;
+            })(end)();
+    },
+
+    // 进入聊天面板
+    // 只需要添加回复ui就好了
+    comeTalk (end) {
+        let data = this.nowCard.npcData;
+        let chat = data.chatArr[data.id];
+        hjm._talk.lab = chat.talk;
+        let replyArr = chat.replyArr;
+        // this.replyArr = [...replyArr];
+        this.replyArr.length = 0;
+        let act = tz();
+        for (let i = 0; i < replyArr.length; i++) {
+            let node = hjm._reply.add();
+            this.replyArr.push(node);
+            node.reply = replyArr[i];
+            node.lab = replyArr[i].talk;
+            let startPos = cc.v2(1000, -100 * i);
+            node.setPosition(startPos);
+            act.moveTo(node, 0.2, 0, startPos.y);
+        }
+        act(end)();
+    },
+
     leaveCard (card) {
         // 暂时只是说聊天npc的，特殊情况晚点再上面加
         let showCard = hjm._who.pool[0]; // 这里是中间的角色，不是下面的卡牌
-        cc.log(hjm._who.pool);
         hjm._button.active = false;
         tz(showCard).moveTo(0.5, -1000, showCard.y)
                     (()=>{
@@ -69,17 +134,24 @@ cc.Class({
                     })();
     }, 
 
-    resetPos (end) {
+    // dir： 1 代表卡牌进入， -1代表卡牌退出
+    resetPos (end, dir = 1) {
         let hand = this.hand;
-        let speed = 3000;
-        let act = tz()._();
+        let speed = 4000;
+        let act = tz();
         for (let i = 0; i < hand.length; i++) {
             let data = hand[i].npcData;
-            data.x = 400 * (i - 1);
-            let t = Math.abs(hand[i].x - data.x) / speed;
-            act.moveTo(hand[i], t, data.x, hand[i].y);
+            let x = (dir > 0) ? (400 * (i - 1)) : -1000;
+            let t = Math.abs(hand[i].x - x) / speed;
+            act.moveTo(hand[i], t, x, hand[i].y);
+            if (dir < 0) {
+                act(()=>{
+                    hand[i].x = 1000;
+                    hand[i].del();
+                })
+            }
         }
-        act._()(end)();
+        act(end)();
     },
 
     // 旧卡删除，新卡填补，没有卡，那就
@@ -185,10 +257,9 @@ cc.Class({
                 chatData.replyArr.push(reply);
             }
         }
+        if (chatData) {
+            chatArr.push(chatData);
+        }
         return npcData;        
-    },
-
-    chooseCardOn (p) {
-
     },
 });
