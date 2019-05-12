@@ -1,15 +1,15 @@
 {
   "ver": "2.2.0",
-  "uuid": "4946f994-2d41-4ea9-b30f-639639104a9c",
+  "uuid": "5a9e9013-e824-4e23-a44e-897793dfa78e",
   "type": "sprite",
   "wrapMode": "clamp",
   "filterMode": "bilinear",
   "premultiplyAlpha": false,
   "subMetas": {
-    "cardRed": {
+    "talkCard1": {
       "ver": "1.0.3",
-      "uuid": "3719fdcd-5396-4016-92c6-12aad8037858",
-      "rawTextureUuid": "4946f994-2d41-4ea9-b30f-639639104a9c",
+      "uuid": "602f3a29-267d-4d25-b5d5-3788246f165e",
+      "rawTextureUuid": "5a9e9013-e824-4e23-a44e-897793dfa78e",
       "trimType": "auto",
       "trimThreshold": 1,
       "rotated": false,

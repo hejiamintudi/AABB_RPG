@@ -7,6 +7,10 @@ cc.Class({
     },
 // library, hand, graveyard
     onLoad () {
+        this.redColor = cc.color(204, 51, 51);
+        this.blueColor = cc.color(16, 194, 194);
+
+
         dyl.button(this, hjm._endGame);
         this._touchId = 0; //用来区别每次触摸
     },
@@ -25,7 +29,7 @@ cc.Class({
                 1,  "enGetAtkData", "enPreAttack", // 敌人的数据要一开始就显示，所以要先获取数据
                     "dealCard", "myPreTurn", "updateDataShow",  //出牌前
                 2,  "myGetAllCardData", "myGetAllCardNum", "touchCard", // 触摸操作
-                    "getPlayCard", "myGetAtkData", "myMainSkill", // 获取卡牌数据
+                    "delBig", "getPlayCard", "myGetAtkData", "myMainSkill", // 获取卡牌数据
                     "resetHandPos", "myPreAttack", "updateDataShow", "myAddMainDmg", "endPlayCard", "myPreAttackAct", 
                     3, "myAttack_3", 
                         "myEndAttack", "myAddBuff", "myResetHurtAct", "checkDie",
@@ -63,6 +67,13 @@ cc.Class({
         dyl.data("buff." +  buff.enName, data);
         hjm._buffShow.lab = (data.chName + ": " + data.chLab).replace("x", " " + String(buff.buffData.num) + " ");
         hjm._buffShow.x = buff.x + buff.parent.x + buff.parent.parent.x;
+    },
+
+    delBig (end) {
+        for (var i = ai.hand.length - 1; i >= 0; i--) {
+            ai.hand[i].big = false;
+        }
+        end();
     },
 
     preCombatAct (end) {
@@ -137,6 +148,13 @@ cc.Class({
             mainCard.atkData.num += card.atkData.friendNum;
         }
         mainCard.power = mainCard.atkData.num;
+        if (mainCard.power >= mainCard.skillNum) {
+            mainCard.big = true;
+            mainCard.big = (mainCard.type === 1) ? this.blueColor : this.redColor;
+        }
+        else {
+            mainCard.big = false;
+        }
     },
 
     getInitCardData (card) {
@@ -575,6 +593,7 @@ cc.Class({
     cardShowButton () {
         hjm._endCardData.active = true;
         hjm._endGame.cardShowButton = false;
+        hjm._endGame.next = false;
         this.showEndCardData(hjm._endGame.card);
     },
 
@@ -1088,6 +1107,7 @@ cc.Class({
         if (p.in(hjm._endCardData)) {
             // cc.log("endGameOn");
             hjm._endGame.cardShowButton = true;
+            hjm._endGame.next = true;
             hjm._endCardData.active = false;
         }
     },
@@ -1528,10 +1548,11 @@ cc.Class({
             // act.moveBy(playCardArr[i], 0.3, cc.v2(0, 100));
             act.fadeTo(playCardArr[i], 0.2, 0);
             if (playCardArr[i].type === 0) {
-                hjm._card.add(playCardArr[i], cc.color(204, 51, 51));
+                hjm._card.add(playCardArr[i], this.redColor);
             }
             else if (playCardArr[i].type === 1) {
-                hjm._card.add(playCardArr[i], cc.color(51, 153, 255));
+                // hjm._card.add(playCardArr[i], cc.color(51, 153, 255));
+                hjm._card.add(playCardArr[i], this.blueColor);
             }
             else {
                 cc.warn("card 的type不是0或1",  type);
