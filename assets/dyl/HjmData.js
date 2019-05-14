@@ -11,6 +11,12 @@ cc.log(cc.sys.isNative);
 
 window.initHjmDataFun = function () {
 	_hjm("coin", 0);
+	_hjm("dd", {
+		a: "a",
+		b: "b"
+	});
+	_hjm("arr", [1, 2, 3]);
+	_hjm("obj", [{a: 23}]);
 };
 
 if (window.isCryptoJS && window.initHjmFun && window.initDylFun) {

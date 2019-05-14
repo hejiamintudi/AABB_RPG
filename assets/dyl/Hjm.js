@@ -18,6 +18,10 @@ window.hjm = null;
 var tab = {};
 var hasTab = {}; // 只是保存
 var pngRes = {};
+
+var arrTab = {}; // 保存数组类型的
+var objTab = {}; // 保存对象类型
+
 var getLab = function getLab(node) {
     // let lab = node.getComponent(cc.Label);
     var name = node.name;
@@ -134,33 +138,50 @@ window.initHjmFun = function () {
     var createFun = function createFun(name, defaultValue) {
         hasTab[name] = true;
         if (Array.isArray(defaultValue)) {
-            var data = JSON.parse(dyl.read(name));
-            if (!data) {
-                data = defaultValue;
-            }
-            var newProxy = new Proxy(data, {
-                set: function set(target, id, value) {
-                    target[id] = value;
-                    dyl.save(name, JSON.stringify(target));
-                    return true;
-                },
-                get: function get(target, id) {
-                    return target[id];
+            // 数组包对象，代表是可变对象
+            var tmp0 = defaultValue[0];
+            if (tmp0 && (typeof tmp0 === "object")) {
+                var data = JSON.parse(dyl.read(name));
+                if (!data) {
+                    data = tmp0;
                 }
-            });
-            var _set = function _set(value) {
-                return cc.error("hjm 无法直接改变原有保存的变量");
-                // data = value;
-                // dyl.save("_" + name);
-            };
-            var _get = function _get() {
-                return newProxy;
-            };
-            tab[name] = {
-                set: _set,
-                get: _get
-            };
+                objTab[name] = data;
+            }
+            else { // 这个是纯数组
+                var data = JSON.parse(dyl.read(name));
+                if (!data) {
+                    data = defaultValue;
+                }
+                arrTab[name] = data;    
+            }
             return;
+            // var data = JSON.parse(dyl.read(name));
+            // if (!data) {
+            //     data = defaultValue;
+            // }
+            // var newProxy = new Proxy(data, {
+            //     set: function set(target, id, value) {
+            //         target[id] = value;
+            //         dyl.save(name, JSON.stringify(target));
+            //         return true;
+            //     },
+            //     get: function get(target, id) {
+            //         return target[id];
+            //     }
+            // });
+            // var _set = function _set(value) {
+            //     return cc.error("hjm 无法直接改变原有保存的变量");
+            //     // data = value;
+            //     // dyl.save("_" + name);
+            // };
+            // var _get = function _get() {
+            //     return newProxy;
+            // };
+            // tab[name] = {
+            //     set: _set,
+            //     get: _get
+            // };
+            // return;
         }
         else if (defaultValue && (typeof defaultValue === "undefined" ? "undefined" : _typeof(defaultValue)) === "object") {
             // var data = JSON.parse(dyl.read(name));
@@ -235,6 +256,9 @@ window.initHjmFun = function () {
                     tab[name].labArr[i].string = String(value);
                 }
                 tab[name].notify(value, oldValue, tab[name].labArr);
+                for (var i = tab[name].funArr.length - 1; i >= 0; i--) {
+                    tab[name].funArr[i](value, oldValue, tab[name].labArr);
+                }
             };
             var _get2 = function _get2() {
                 return str;
@@ -243,7 +267,8 @@ window.initHjmFun = function () {
                 set: _set2,
                 get: _get2,
                 labArr: [],
-                notify: function (newValue, oldValue, labArr) {}
+                notify: function (newValue, oldValue, labArr) {},
+                funArr: [] // 这是notify的数组形式，只给个人库的代码使用
             };
             return;
         }
@@ -294,6 +319,9 @@ window.initHjmFun = function () {
                 tab[name].labArr[i].string = String(value);
             }
             tab[name].notify(num, oldValue, tab[name].labArr);
+            for (var i = tab[name].funArr.length - 1; i >= 0; i--) {
+                tab[name].funArr[i](num, oldValue, tab[name].labArr);
+            }
         };
         var get = function get() {
             var num1 = data1 - (rand1 * 13 + rand2 * 1000);
@@ -313,13 +341,21 @@ window.initHjmFun = function () {
             get: get,
             set: set,
             labArr: [], // 这次改为多个，可能不只是一个地方有这个数字
-            notify: function (newValue, oldValue, labArr) {}
+            notify: function (newValue, oldValue, labArr) {},
+            funArr: []
         };
         set(num);
     };
 
     _hjm = new Proxy(createFun, {
         get: function get(target, id) {
+            if (arrTab[id]) {
+                return arrTab[id];
+            }
+            if (objTab[id]) {
+                return objTab[id];
+            }
+
             if (!hasTab[id]) {
                 cc.warn("hjm 没有", id, "这个属性");
                 return;
@@ -360,8 +396,7 @@ window.initHjmFun = function () {
                     cc.warn("hjm 这个属性不存在或不能设置函数", id);
                 }
                 return;
-            }
-            else {
+            } else if (typeof value.getChildren === "function"){
                 var node = value;
                 // cc.log(type, id, node);
                 // var mylog = function (logstr) {
@@ -392,10 +427,35 @@ window.initHjmFun = function () {
                     var sprite = node.getComponent(cc.Sprite);
                     sprite.spriteFrame = spr;
                 });
+            } else if (Array.isArray(value)) {
+                if (!arrTab[id]) {
+                   return cc.warn("hjm 的arrTab没有定义过这个属性", id);
+                }
+                dyl.save(id, JSON.stringify(value));
+                arrTab[id] = value;
+            } 
+            else { // 这个是纯对象的
+                if (!objTab[id]) {
+                   return cc.warn("hjm 的objTab没有定义过这个属性", id);
+                }
+                dyl.save(id, JSON.stringify(value));
+                objTab[id] = value;
             }
             return true;
         }
     });
+};
+
+window._hjmAddArrFun = function (name, fun) {
+    tab[name].funArr.push(fun);
+};
+
+window._hjmDelArrFun = function (name, fun) {
+    var index = tab[name].funArr.indexOf(fun);
+    if (index === -1) {
+        return cc.error("没有这个函数");
+    }
+    tab[name].splice(index, 1);
 };
 
 if (window.initHjmDataFun && window.isCryptoJS && window.initDylFun) {

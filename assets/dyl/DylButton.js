@@ -6,6 +6,7 @@ var SceneEnum = cc.Enum({
     ExitGame: 4,
     Popup: 5,
     Popdown: 6,
+    Buy: 7
 })
 cc.Class({
     extends: cc.Component,
@@ -29,8 +30,16 @@ cc.Class({
         popdownNode: cc.Node,
 
         // clearArr: [cc.String],
-        // "Null", "NextScene", "NextLevel", "Restart", "ExitGame", "Popup", "Popdown"
-        sceneType: "NextLevel",
+        // "Null", "NextScene", "NextLevel", "Restart", "ExitGame", "Popup", "Popdown", "Buy"
+        // sceneType: "NextLevel",
+        sceneType: {
+            default: "NextLevel",
+            notify () {
+                if (this.sceneType === "Buy") {
+                    this.setBuy();
+                }
+            }
+        }
         // sceneType: {
         //     default: SceneEnum.Null,
         //     type: cc.Enum(SceneEnum),
@@ -46,10 +55,40 @@ cc.Class({
         //     displayName: "场景名"
         // },
 
+        coin: 0,
+        toolName: "",
+        hasSetBuy: false
     },
 
     __preload: function () {
+        if (CC_EDITOR) {
+            return;
+        }
         this.myInit();
+    },
+
+    setBuy: function () {
+        if (this.hasSetBuy) {
+            return;
+        }
+        this.hasSetBuy = true;
+        let node = new cc.Node("noMoney");
+        this.node.addChild(node);
+        node.addComponent(cc.Sprite);
+        node.width = this.node.width;
+        node.height = this.node.height;
+
+        node = new cc.Node("coinNum");
+        this.node.addChild(node);
+        node.addComponent(cc.Label);
+        node.lineHeight = this.node.height;
+        node.fontSize = 0.8 * this.node.height;
+
+        node = new cc.Node("hasBuy");
+        this.node.addChild(node);
+        node.addComponent(cc.Sprite);
+        node.width = this.node.width;
+        node.height = this.node.height;
     },
 
     getTopNode: function () {
@@ -91,6 +130,24 @@ cc.Class({
             cc.log("touchcancel", _scale);
             self.node.setScale(_scale);
         }); 
+
+        if (this.sceneType === "Buy") {
+            this.initBuy();
+        }
+    },
+
+    initBuy: function () {
+        if (this.toolName === "") {
+            return;
+        }
+
+        let toolPool = _hjm;
+        let arr = this.toolName.split(".");
+        for (let i = 0; i < arr.length - 1; i++) {
+            toolPool = toolPool[arr[i]];
+        }
+        let id = arr[arr.length - 1];
+        
     },
 
     clickFun: function () {
@@ -189,6 +246,9 @@ cc.Class({
             // let fade = cc.fadeTo(0.3, 0);
             // let scale = cc.scaleTo(0.3, 2);
             // node.runAction(cc.sequence(cc.spawn(fade, scale), cfun));
+        }
+        else if (this.sceneType === "Buy") {
+            this.buy();
         }
         else {
             this.clickFun();
