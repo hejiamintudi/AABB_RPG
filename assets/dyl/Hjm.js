@@ -130,7 +130,7 @@ window.initHjmFun = function () {
     //             dyl.rand.set(tmp);
     //         }
     //         else {
-    //             dyl.rand.set(Number(node.name));
+     //             dyl.rand.set(Number(node.name));
     //         }
     //     });
     // };
@@ -187,18 +187,28 @@ window.initHjmFun = function () {
             // var data = JSON.parse(dyl.read(name));
             var data = {};
             var objStr = "_" + name + "_";
-            if (dyl.read(objStr)) {
+            if (dyl.read(objStr)) { // 这个对象曾经保存过了
                 for (var objIndex in defaultValue) {
-                    data[objIndex] = dyl.read(objStr + objIndex);
+                    if (typeof defaultValue[objIndex] === "boolean") {
+                        data[objIndex] = (dyl.read(objStr + objIndex) > 0);
+                    }
+                    else {
+                        data[objIndex] = dyl.read(objStr + objIndex);
+                    }
                     // cc.log(objStr, objIndex, data[objIndex]);
                 }
             }
             else {
                 data = defaultValue;
                 for (var objIndex in defaultValue) {
-                     dyl.save(objStr + objIndex, data[objIndex]);
+                    if (typeof defaultValue[objIndex] === "boolean") {
+                        dyl.save(objStr + objIndex, data[objIndex] ? 1 : 0);
+                    }
+                    else {
+                        dyl.save(objStr + objIndex, data[objIndex]);
+                    }
                 }
-                dyl.save(objStr, true);
+                dyl.save(objStr, 1);
             }
             // 给一个函数嵌套，防止局部变量被污染了
             var fun = function () {
@@ -216,7 +226,12 @@ window.initHjmFun = function () {
                         }
                         target[id] = value;
                         // dyl.save(name, JSON.stringify(target));
-                        dyl.save(tmpObjStr + id, value);
+                        if (typeof defaultValue[id] == "boolean") {
+                            dyl.save(tmpObjStr + id, value ? 1 : 0);
+                        }
+                        else {
+                            dyl.save(tmpObjStr + id, value);
+                        }
                         return true;
                     },
                     get: function get(target, id) {
@@ -237,6 +252,44 @@ window.initHjmFun = function () {
                 };
             };
             fun();
+            return;
+        } else if (typeof defaultValue === "boolean") {
+            var str = dyl.read(name);
+            if (typeof str !== "number") {
+                str = defaultValue;
+            }
+            else {
+                str = (str > 0);
+            }
+            var _set3 = function _set3(value) {
+                // if (typeof value === "function") {
+                //     tab[name].notify = value;
+                //     return;
+                // }
+                if (typeof value !== "boolean") {
+                    return cc.warn("hjm", name, "这个变量应该是bool类型，而你的设置是", value);
+                }
+                dyl.save(name, value ? 1 : 0);
+                var oldValue = str;
+                str = value;
+                for (var i = tab[name].labArr.length - 1; i >= 0; i--) {
+                    tab[name].labArr[i].string = String(value);
+                }
+                tab[name].notify(value, oldValue, tab[name].labArr);
+                for (var i = tab[name].funArr.length - 1; i >= 0; i--) {
+                    tab[name].funArr[i](value, oldValue, tab[name].labArr);
+                }
+            };
+            var _get3 = function _get3() {
+                return str;
+            };
+            tab[name] = {
+                set: _set3,
+                get: _get3,
+                labArr: [],
+                notify: function (newValue, oldValue, labArr) {},
+                funArr: [] // 这是notify的数组形式，只给个人库的代码使用
+            };
             return;
         } else if (typeof defaultValue === "string") {
             var str = dyl.read(name);
@@ -373,7 +426,7 @@ window.initHjmFun = function () {
 
         set: function set(target, id, value) {
             var type = typeof value === "undefined" ? "undefined" : _typeof(value);
-            if (type === "number" || type === "string") {
+            if (type === "number" || type === "string" || type === "boolean") {
                 if (!hasTab[id]) {
                     cc.warn("hjm 没有", id, "这个属性");
                     return;
@@ -455,7 +508,7 @@ window._hjmDelArrFun = function (name, fun) {
     if (index === -1) {
         return cc.error("没有这个函数");
     }
-    tab[name].splice(index, 1);
+    tab[name].funArr.splice(index, 1);
 };
 
 if (window.initHjmDataFun && window.isCryptoJS && window.initDylFun) {

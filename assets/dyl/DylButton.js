@@ -39,7 +39,7 @@ cc.Class({
                     this.setBuy();
                 }
             }
-        }
+        },
         // sceneType: {
         //     default: SceneEnum.Null,
         //     type: cc.Enum(SceneEnum),
@@ -55,8 +55,18 @@ cc.Class({
         //     displayName: "场景名"
         // },
 
-        coin: 0,
-        toolName: "",
+        coin: {
+            default: 0,
+            displayName: "价格"
+        },
+        coinName: {
+            default: "coin", // 例如：钻石，金币
+            displayName: "货币单位"
+        },
+        toolName: {
+            default: "",
+            displayName: "物品路径（.隔开）"
+        },
         hasSetBuy: false
     },
 
@@ -115,6 +125,10 @@ cc.Class({
         let _color = null;
         let _scale = null;
         this.node.on('touchstart', function ( event ) {
+            if (self.sceneType === "Buy") {
+                return;
+            }
+
             // self.node.color = cc.color(125, 125, 125);
             _scale = self.node.getScale();
             _color = self.node.color;
@@ -122,12 +136,20 @@ cc.Class({
         });  
         this.node.on('touchend', function ( event ) {
             // self.node.color = _color;
+            if (self.sceneType === "Buy") {
+                self.onClick();
+                return;
+            }
+
             self.node.setScale(_scale);
             self.onClick();
         });  
         this.node.on('touchcancel', function ( event ) {
+            if (self.sceneType === "Buy") {
+                return;
+            }
             // self.node.color = _color;
-            cc.log("touchcancel", _scale);
+            // cc.log("touchcancel", _scale);
             self.node.setScale(_scale);
         }); 
 
@@ -141,14 +163,160 @@ cc.Class({
             return;
         }
 
+        this.dyl_noMoneyNode = this.node.getChildByName("noMoney");
+        let labNode = this.node.getChildByName("coinNum");
+        if (labNode) {
+            this.dyl_coinNumLab = labNode.getComponent(cc.Label);
+            this.dyl_coinNumLab.string = String(this.coin);
+            // cc.log("coin", this.coin);
+        }
+        this.dyl_hasBuyNode = this.node.getChildByName("hasBuy");
+
         let toolPool = _hjm;
         let arr = this.toolName.split(".");
         for (let i = 0; i < arr.length - 1; i++) {
             toolPool = toolPool[arr[i]];
         }
         let id = arr[arr.length - 1];
-        
+        // cc.log(toolPool, id);
+        // 数组类型， 只能卖一个
+        if (Array.isArray(toolPool)) {
+            let toolArr = toolPool;
+            this.dyl_isCanBuy = function () {
+                return (toolArr.indexOf(id) < 0);
+            }
+            this.dyl_buy = function () {
+                toolArr.push(id);
+                hjm[this.coinName] -= this.coin;
+            }
+        } else if (toolPool === _hjm) {
+            if (typeof hjm[id] === "number") {
+                this.dyl_isCanBuy = function () {
+                    return true;
+                }
+                this.dyl_buy = function () {
+                    hjm[id]++;
+                    hjm[this.coinName] -= this.coin;
+                }
+            }
+            else { // bool
+                this.dyl_isCanBuy = function () {
+                    return !hjm[id];
+                }
+                this.dyl_buy = function () {
+                    hjm[id] = true;
+                    hjm[this.coinName] -= this.coin;
+                }
+            }
+        }
+        else {
+            let isOnly = null; // 是否唯一.true 是， false 不是， null 代表出错
+            for (let i in toolPool) {
+                if (typeof toolPool[i] === "number") {
+                    isOnly = false;
+                }
+                else {
+                    isOnly = true;
+                }
+                break;
+            }
+            if (isOnly === null) {
+                return cc.warn("DylButton", this.toolName, "这是一个空对象，不知道到底是不是唯一物品");
+            }
+
+            // 也就是bool类型
+            if (isOnly) {
+                this.dyl_isCanBuy = function () {
+                    return !toolPool[id];
+                }
+                this.dyl_buy = function () {
+                    toolPool[id] = true;
+                    hjm[this.coinName] -= this.coin;
+                }
+            }
+            else {
+                // 因为没有数量限制，所以买多少都无所谓
+                this.dyl_isCanBuy = function () {
+                    return true;
+                }
+                this.dyl_buy = function () {
+                    if (!toolPool[id]) {
+                        toolPool[id] = 1;
+                    }
+                    else {
+                        toolPool[id]++;
+                    }
+                    hjm[this.coinName] -= this.coin;
+                }
+            }
+        }
+
+        if (this.dyl_updateBuy) {
+            _hjmDelArrFun(this.coinName, this.dyl_updateBuy);
+        }
+
+        this.dyl_updateBuy = ()=>{
+            // cc.log("dyl_updateBuy");
+            if (!this.dyl_isCanBuy()) {
+                dyl.set(this.dyl_hasBuyNode, "active", true);
+                // return;
+            }
+            else {
+                dyl.set(this.dyl_hasBuyNode, "active", false);
+            }
+            // cc.log(hjm[this.coinName], this.coin, hjm[this.coinName] < this.coin);
+            if (hjm[this.coinName] < this.coin) {
+                // cc.log(true);
+                dyl.set(this.dyl_noMoneyNode, "active", true);
+            }
+            else {
+                // cc.log(false);
+                dyl.set(this.dyl_noMoneyNode, "active", false);    
+            }
+        }
+        _hjmAddArrFun(this.coinName, this.dyl_updateBuy);
+
+        this.node.add = (...arr)=>{
+            for (let i = arr.length - 1; i >= 0; i--) {
+                let val = arr[i];
+                if (typeof val === "number") {
+                    this.coin = val;
+                }
+                else if (typeof val === "string") {
+                    this.toolName = val;
+                }
+                else if (typeof val === "function") {
+                    this.endCheckBuyFun = val;
+                }
+            }
+            this.initBuy();
+        }
+
+        this.dyl_updateBuy();
     },
+
+    buy: function () {
+        if (this.dyl_isCanBuy()) { // 检查数量上是否可以还可以买
+            if (hjm[this.coinName] >= this.coin) { // 检查金额上是否还可以买
+                if (this.endCheckBuyFun) {   // 这是用户自定义的特效和特别条件:例如有购买上限的那些
+                    if (this.endCheckBuyFun()) { 
+                        this.dyl_buy();
+                    }
+                }
+                else {
+                    this.dyl_buy();
+                }
+            }
+        }
+        return;
+    },
+
+    onDestroy: function () {
+        if (this.dyl_updateBuy) {
+            _hjmDelArrFun(this.coinName, this.dyl_updateBuy);
+        }
+    },
+
 
     clickFun: function () {
         if (this.funName !== "") {
