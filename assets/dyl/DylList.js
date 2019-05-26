@@ -11,30 +11,40 @@ cc.Class({
     		default: Dir.up,
     		type: Dir
     	},
-    	isVertical: {
-    		default: true,
-    		displayName: "是否纵向"
-    	},
+    	// isVertical: {
+    	// 	default: true,
+    	// 	displayName: "是否纵向"
+    	// },
     	d: 8, // 两张图片之间间隔,
-    	maxId: 0 // 最大id，如果为 0，代表正负都可以无限。 否则 id 范围是 0-maxId
+    	startP: 5, // 当前位置
+    	maxId: 0, // 最大id，如果为 0，代表正负都可以无限。 否则 id 范围是 0-maxId
+    	isTouch: true
     },
 
     update (dt) {
-    	cc.log("update");
-    	this.node.add(this.t * 300);
-    	this.t += dt;
+    	// cc.log("update");
+    	// this.node.add(this.t * 50);
+    	// this.t -= dt;
     },
 
     __preload () {
     	if (this.maxId < 0) {
     		return cc.error("最大数量不能为负数");
     	}
+    	this.oriStartP = this.startP;
+
+    	this.isVertical = (this.dir === Dir.up) || (this.dir === Dir.down);
     	this.t = 0;
     	cc.kk = this;
+    	this.addFun = null; // 这是新显示节点时触发的 fun(id, node)
+    	this.buttonFun = null; // 点击节点触发的 fun (id, node)
+    	this.runFun = null; // 自动动作的update取消函数
     	this.addFun = (i, node)=>{
     		node.num = i;
     	}
-    	// this.addFun = null; // 这是新显示节点时触发的 fun(id, node)
+    	this.buttonFun = (i, node)=>{
+    		cc.log(i);
+    	}
     	this.nodeArr = []; // 当前显示的节点数组
     	this.poolArr = [];
     	this.nodeLen = 0;
@@ -53,11 +63,16 @@ cc.Class({
     		if (d < 1) { // 明显如果节点长度都是 0 那还怎么是list，都堆在一起了
     			return cc.warn("DylList 这个节点的长度小于1", nodeArr[i].name);
     		}
+    		cc.log("d", this.isVertical, dyl.getSize(nodeArr[i]), d);
     		this.poolArr.push(this.addPool(nodeArr[i], d));
     		this.poolArr[i].d = d;
     		this.nodeLen += (d + this.d);
     	}
-    	let nodeNum = this.poolArr.length;
+
+    	this.minP = this.startP;
+    	// this.maxP = this.nodeLen - this.len;
+    	this.getMaxP();
+
     	this.poolArr.add = function (id) {
     		let mod = id % this.length;
     		if (mod < 0) {
@@ -65,31 +80,250 @@ cc.Class({
     		}
     		return this[mod].add();
     	}
-    	// this.add(50);
+    	this.add(this.startP);
+
 
     	// add 的初始化只能在第一次用，后面不能再用了
     	this.node.add = (...arr)=>{
     		if (typeof arr[0] !== "number") {
     			for (var i = arr.length - 1; i >= 0; i--) {
     				if (typeof arr[i] === "function") {
-    					this.addFun = arr[i];
+    					if (this.addFun) {
+    						this.buttonFun = arr[i];
+    					}
+    					else {
+    						this.addFun = arr[i];
+    					}
     				}
     				else if (typeof arr[i] === "number") {
     					this.maxId = arr[i];
+    					this.getMaxP();
     				}
     			}
+    			// this.startId = 0;
+    			// this.endId = 0;
+    			this.resetArr(this.startId, this.endId, 0, 0);
+    			this.resetPos({p: 0, sId: 0, eId: 0});
     			this.node.add = (x)=>this.add(x);
+    			this.add(this.oriStartP);
     		}
     		else {
     			this.node.add = (x)=>this.add(x);
     			this.add(arr[0]);
     		}
     	}
+
+    	if (this.isTouch) {
+    		this.setTouch();
+    	}
+    },
+
+    getMaxP () {
+    	if (this.maxId <= 0) {
+    		this.maxP = 0;
+    		return;
+    	}
+    	let nodeNum = this.poolArr.length; 
+    	let n = Math.floor(this.maxId / nodeNum);
+    	let len = n * this.nodeLen;
+    	n = this.maxId - n * nodeNum;
+    	for (let i = 0; i < n; i++) {
+    		len += (this.poolArr[i].d + this.d);
+    	}
+    	len -= this.oriStartP;
+    	len = len - this.d - this.len;
+    	this.maxP = len;
+    },
+
+    setTouch () {
+    	let self = this;
+    	let isMove = false;
+    	let touchOnP = 0;
+
+    	let preP = 0; 
+    	let nextP = 0;
+    	this.node.on("touchstart", function (event) {
+    		let p = event.getLocation();
+    		if (self.runFun) {
+    			self.runFun();
+    			self.runFun = null;
+    		}
+    		isMove = false;
+    		touchOnP = self.isVertical ? p.y : p.x;
+    		preP = touchOnP;
+    		nextP = touchOnP;
+    	});
+
+    	this.node.on ("touchmove", function (event) {
+    		let p = event.getLocation();
+    		isMove = true;
+    		preP = nextP;
+    		nextP = self.isVertical ? p.y : p.x;
+    		if (self.dir === Dir.right || self.dir === Dir.up) {
+    			self.add(preP - nextP + self.startP);
+    		}
+    		else {
+    			self.add(nextP - preP + self.startP);
+    		}
+    	});
+
+    	let touchEndFun = function (event) {
+    		let p = event.getLocation();
+    		if (!isMove) { // 触摸点击
+    			if (self.buttonFun) {
+    				for (let i = self.nodeArr.length - 1; i >= 0; i--) {
+    					let rect = self.nodeArr[i].getBoundingBoxToWorld();
+    					if (rect.contains(p)) {
+    						let node = self.nodeArr[i];
+    						self.buttonFun(node.id, node);
+		                    return;
+		                }
+    				}
+    			}
+    			return;
+    		}
+    		if (self.startP <= self.minP || self.startP >= self.maxP) {
+    			self.checkOut();
+    			return;
+    		}
+    		if (preP + 4 < nextP) {
+    			if (self.dir === Dir.down || self.dir === Dir.left) {
+    				self.quickMove(1);
+    			}
+    			else {
+    				self.quickMove(-1)
+    			}
+    			return;
+    		}
+    		else if (nextP + 4 < preP) {
+    			if (self.dir === Dir.down || self.dir === Dir.left) {
+    				self.quickMove(-1);
+    			}
+    			else {
+    				self.quickMove(1)
+    			}
+    			return;
+    		}
+    		self.checkOut();
+    	}
+    	this.node.on ("touchend", touchEndFun);
+
+    	this.node.on ("touchcancel", touchEndFun);
+    },
+
+    quickMove (dir) {
+    	let a = -300 * dir;
+    	let v = 600 * dir;
+    	let f = -16000 * dir;
+    	let p = this.startP;
+    	let outP = (dir > 0) ? this.maxP : this.minP;
+
+    	// let oriPos = this.startP;
+    	// let endPos = oriPos + dir * len;
+
+		let fun = (dt)=>{
+			if ((p - outP) * dir > 0) { // 超出范围了
+				a += (f * dt);
+				v = v + a * dt;
+			}
+			else {
+				v = v + a * dt;
+			}
+			if (v * dir <= 0) { // 方向不同，代表速度为 0了
+				this.runFun = null;
+				this.checkOut();
+				return false;
+			}
+			p += (v * dt);
+			this.add(p);
+			return true;
+
+			// v += (dir * a * dt);
+			// let r = t / time;
+			// if (r >= 1) {
+			// 	this.add(endPos);
+			// 	this.runFun = null;
+			// 	return false;
+			// }
+			// r = Math.sqrt(r);
+			// this.add(r * len * dir + oriPos);
+			// // this.add(dir * 1000 * dt + this.startP);
+			// return true;
+		}
+		this.runFun = dyl.update(fun);
+    },
+
+    quickOut (dir) {
+    	let oriPos = this.startP;
+    	let endPos = null;
+    	let len = null;
+    	let t = 0;
+
+    	let fun = (dt)=>{
+			t += dt;
+			let r = t / time;
+			if (r >= 1) {
+				this.add(endPos);
+				this.runFun = null;
+				return false;
+			}
+			r = Math.sqrt(r);
+			this.add(r * len * dir + oriPos);
+			// this.add(dir * 1000 * dt + this.startP);
+			return true;
+    	}
+
+    	let out = (dt)=>{
+    		
+    	}
+    	if (endPos > this.maxP) {
+    		let endPos = this.maxP;
+    		let len = this.maxP - oriPos;
+    		let time = 0.002 * len; 
+    	}
+    	else if (endPos < this.minP) {
+    		let endPos = this.minP;
+    		let len = oriPos - this.minP;
+    		let time = 0.002 * len; 
+    	}
+		this.runFun = dyl.update(fun);
+    },
+
+    checkOut () {
+    	if (this.maxId === 0) {
+    		return;
+    	}
+    	let oriP = this.startP;
+    	let endP = null;
+    	let time = 0.1;
+    	let t = 0;
+    	if (this.startP < this.minP) {
+    		endP = this.minP;
+    	}
+    	else if (this.startP > this.maxP) {
+    		endP = this.maxP;
+    	}
+    	else {
+    		return;
+    	}
+    	// cc.log(this.startP, this.minP, this.maxP, endP);
+    	let fun = (dt)=>{
+    		t += dt;
+    		this.add((endP - oriP) * t / time  + oriP);
+    		if (t > time) {
+    			this.add(endP);
+    			this.runFun = null; 
+    			return false;
+    		}
+    		return true;
+    	}
+    	this.runFun = dyl.update(fun);
     },
 
     // 当有最大值时，那第一个的id就微妙了, 暂时取消这个想法，初始化，另外一个函数，获得最大的 d = 所有节点长（包括间隔）- 
     // 虽然说是 x 其他 y 可以用
     getStartData (x) {
+    	let kk = x;
     	// let data = {
     	// 	p: 0, // 移动后的偏移量
     	// 	sId: 0, // 第一个节点的id
@@ -106,22 +340,28 @@ cc.Class({
     	let i = 0;
     	for (i = 0; i < this.poolArr.length; i++) {
     		let pool = this.poolArr[i];
-    		if (x > (pool.d + this.d)) {
+    		// if (x > (pool.d + this.d)) {
+    		if (x > pool.d) {
     			x -= (pool.d + this.d);
     			n++;
     		}
     		else {
     			// data.p = pool.d * 0.5 - x; 
-    			p = x; 
     			break;
     		}
     	}
+    	p = x; 
     	sId = n;
 
+    	// cc.log("x", x, i, n, p);
+
+    	// cc.log(this.poolArr[i]);
     	// 获取 eId
-    	x = this.poolArr[i].d - x;
+    	x = this.poolArr[i % this.poolArr.length].d - x;
     	let poolLen = this.poolArr.length;
-    	while (x <= this.len) {
+    	let len = this.len - this.d;
+    	// while (x <= this.len) {
+    	while (x <= len) {
     		i = (i + 1) % poolLen;
     		x += (this.poolArr[i].d + this.d);
     		n++;
@@ -144,16 +384,19 @@ cc.Class({
 	    	}
     	}
 
-    	// cc.log("data", data);
     	let data = {
     		p: p,
     		sId: sId,
     		eId: eId
     	}
+    	// cc.log("data", kk, data);
+
     	return data;
     },
 
     add (x) {
+    	cc.log("x", x);
+    	this.startP = x;
     	let data = this.getStartData(x);
     	this.resetArr(this.startId, this.endId, data.sId, data.eId);
     	this.resetPos(data);
@@ -165,16 +408,16 @@ cc.Class({
     		let node = this.nodeArr[i];
     		let pos = node.d * 0.5 + p;
     		if (this.dir === Dir.up) {
-    			node.y = pos;
+    			node.y = pos - this.len * 0.5;
     		}
     		else if (this.dir === Dir.down) {
-    			node.y = this.len - pos;
+    			node.y = this.len * 0.5 - pos;
     		}
     		else if (this.dir === Dir.right) {
-    			node.x = pos;
+    			node.x = pos - this.len * 0.5;
     		}
     		else {
-    			node.x = this.len - pos;
+    			node.x = this.len * 0.5 - pos;
     		}
     		// cc.log(node.x, pos, p);
     		p += (node.d + this.d);
