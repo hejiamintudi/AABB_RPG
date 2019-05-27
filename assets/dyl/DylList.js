@@ -39,12 +39,12 @@ cc.Class({
     	this.addFun = null; // 这是新显示节点时触发的 fun(id, node)
     	this.buttonFun = null; // 点击节点触发的 fun (id, node)
     	this.runFun = null; // 自动动作的update取消函数
-    	this.addFun = (i, node)=>{
-    		node.num = i;
-    	}
-    	this.buttonFun = (i, node)=>{
-    		cc.log(i);
-    	}
+    	// this.addFun = (i, node)=>{
+    	// 	node.num = i;
+    	// }
+    	// this.buttonFun = (i, node)=>{
+    	// 	cc.log(i);
+    	// }
     	this.nodeArr = []; // 当前显示的节点数组
     	this.poolArr = [];
     	this.nodeLen = 0;
@@ -86,7 +86,9 @@ cc.Class({
     	// add 的初始化只能在第一次用，后面不能再用了
     	this.node.add = (...arr)=>{
     		if (typeof arr[0] !== "number") {
-    			for (var i = arr.length - 1; i >= 0; i--) {
+    			this.addFun = null;
+    			this.buttonFun = null;
+    			for (var i = 0; i < arr.length; i++) {
     				if (typeof arr[i] === "function") {
     					if (this.addFun) {
     						this.buttonFun = arr[i];
@@ -104,17 +106,22 @@ cc.Class({
     			// this.endId = 0;
     			this.resetArr(this.startId, this.endId, 0, 0);
     			this.resetPos({p: 0, sId: 0, eId: 0});
-    			this.node.add = (x)=>this.add(x);
+    			// this.node.add = (x)=>this.add(x);
     			this.add(this.oriStartP);
+    			return this.nodeArr;
     		}
     		else {
-    			this.node.add = (x)=>this.add(x);
+    			// this.node.add = (x)=>this.add(x);
     			this.add(arr[0]);
+    			return this.nodeArr;
     		}
     	}
 
     	if (this.isTouch) {
     		this.setTouch();
+    	}
+    	else {
+    		this.setButton();
     	}
     },
 
@@ -175,7 +182,7 @@ cc.Class({
     					let rect = self.nodeArr[i].getBoundingBoxToWorld();
     					if (rect.contains(p)) {
     						let node = self.nodeArr[i];
-    						self.buttonFun(node.id, node);
+    						self.buttonFun(node.dylListId, node);
 		                    return;
 		                }
     				}
@@ -209,6 +216,24 @@ cc.Class({
     	this.node.on ("touchend", touchEndFun);
 
     	this.node.on ("touchcancel", touchEndFun);
+    },
+
+    setButton () {
+    	let fun = (event)=>{
+    		if (!this.buttonFun) {
+    			return;
+    		}
+    		let p = event.getLocation();
+    		for (let i = this.nodeArr.length - 1; i >= 0; i--) {
+				let rect = this.nodeArr[i].getBoundingBoxToWorld();
+				if (rect.contains(p)) {
+					let node = this.nodeArr[i];
+					this.buttonFun(node.dylListId, node);
+                    return;
+                }
+			}
+    	}
+    	this.node.on ("touchend", fun);
     },
 
     quickMove (dir) {
@@ -297,7 +322,11 @@ cc.Class({
     	let endP = null;
     	let time = 0.1;
     	let t = 0;
+    	// cc.log(this.startP, this.minP, this.maxP);
     	if (this.startP < this.minP) {
+    		endP = this.minP;
+    	}
+    	else if (this.minP > this.maxP) {
     		endP = this.minP;
     	}
     	else if (this.startP > this.maxP) {
@@ -446,7 +475,7 @@ cc.Class({
     		for (let i = start; i < end; i++) {
     			let node = this.poolArr.add(i);
     			this.nodeArr.push(node);
-    			node.id = i;
+    			node.dylListId = i;
     			if (this.addFun) {
     				this.addFun(i, node);
     			}
