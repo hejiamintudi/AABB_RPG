@@ -69,13 +69,16 @@ window.tz = function (node, ...argArr) {
 	let createActArrFun = function (actArr) {
 		let callBack = endFun;
 		endFun = function () {
+			if (isDebug) {
+				dylLog("sameArr");
+			}
 			stopActArr = [];
 			let count = actArr.length + 1; // 多加一个，防止数组为空，不执行
 			let countFun = function () {
 				if (!(--count)) {
-					if (isDebug) {
-						dylLog("sameArr");
-					}
+					// if (isDebug) {
+					// 	dylLog("sameArr");
+					// }
 					callBack();
 				}
 			}
@@ -91,6 +94,12 @@ window.tz = function (node, ...argArr) {
 				else if (typeof act === "function") {
 					// act = cc.callFunc(act);
 					// 设置唯一函数，防止多次调用，也防止明明返回false，还要继续执行
+					if (act.actArr) {
+						for (let j = 0; j < act.actArr.length; j++) {
+							let tmpAct = act.actArr[j];
+							stopActArr.push({node: tmpAct.node, act: tmpAct});
+						}
+					}
 					let actCallBack = once(countFun);
 					if (!act(actCallBack)) {
 						actCallBack();
@@ -130,7 +139,17 @@ window.tz = function (node, ...argArr) {
 			let tmpEndFun = endFun;
 			if (typeof act === "function") {
 				endFun = once(()=>{
+					if (isDebug) {
+						// cc.log("fun isDebug");
+						dylLog(act.actName);
+					}
 					stopActArr = [];
+					if (act.actArr) {
+						for (let j = 0; j < act.actArr.length; j++) {
+							let tmpAct = act.actArr[j];
+							stopActArr.push({node: tmpAct.node, act: tmpAct});
+						}
+					}
 					if (!act(tmpEndFun)) {
 						tmpEndFun();
 					}
@@ -149,6 +168,14 @@ window.tz = function (node, ...argArr) {
 				let loopNum = act;
 
 				endFun = ()=>{
+					if (isDebug) {
+						if (act === -1) {
+							dylLog("无限循环");
+						}
+						else {
+							dylLog("还剩循环次数 " + String(loopNum));
+						}
+					}
 					stopActArr = [];
 					if (loopNum--) {
 						loopArr[loopId].oriEndFun();
@@ -162,14 +189,22 @@ window.tz = function (node, ...argArr) {
 			}
 
 			let cfun = cc.callFunc(function () {
-				if (isDebug) {
-					// dylLog(typeof act.actName);
-					dylLog(act.actName);
-				}
+				// if (isDebug) {
+				// 	// dylLog(typeof act.actName);
+				// 	if (typeof act !== "number") {
+				// 		dylLog(act.actName);
+				// 	}
+				// 	else {
+				// 		dylLog(act);
+				// 	}
+				// }
 				tmpEndFun();
 			});
 			let seq = cc.sequence(act, cfun);
 			endFun = function () {
+				if (isDebug) {
+					dylLog(act.actName);
+				}
 				stopActArr = [{node: act.node, act: seq}];
 				if (!act.node.active) {
 					cc.warn("这个节点 active 为 false", act.actName);
@@ -219,8 +254,13 @@ window.tz = function (node, ...argArr) {
 		else {
 			cc.error("参数有问题,这里不接受其他参数");
 		}
-		act.node = defaultNode;
-		act.actName = data;
+		if (typeof act === "function") {
+			act.node = defaultNode;
+			act.actName = "function";
+		} else if (typeof act !== "number") {
+			act.node = defaultNode;
+			act.actName = data;
+		}
 		return act;
 	}
 	let ansFun = function (...arr) {
@@ -341,6 +381,235 @@ window.tz = function (node, ...argArr) {
         			}
         			act = createSampleAct(node, ...arr);
         			act.actName = node;
+        		}
+        		// 参数 [nodeArr]? [差别数组]? node? 时间 = 0 
+        		else if (actName === "to" || actName === "by") {
+        			arr = [node, ...arr];
+        			// cc.log(arr);
+        			let i = 0;
+        			let nodeArr = null;
+        			let actArr = [];
+        			let diffArr = [];
+        			for (i; i < arr.length; i++) {
+        				// cc.log("arr", i, arr[i], Array.isArray(arr[i]));
+        				if (Array.isArray(arr[i])) {
+        					if (typeof arr[i][0].getChildren === "function") {
+        						nodeArr = arr[i];
+        					}
+        					else {
+        						diffArr = arr[i];
+        					}
+        				}
+        				else {
+        					break;
+        				}
+        			}
+
+        			// cc.log("nodeArr", nodeArr);
+        			if (typeof arr[i].getChildren === "function") {
+        				if (nodeArr) {
+        					return cc.error("tz 已经有了数组，那就别再加节点了", arr[i]);
+        				}
+        				nodeArr = [arr[i]];
+        				i++;
+        			}
+        			else if (!nodeArr){
+        				nodeArr = [defaultNode];
+        			}
+        			let delayTime = 0;
+        			let diff_delayTime = 0;
+
+        			let pos = null;
+        			let diff_pos = cc.v2(0, 0);
+
+        			let opacity = null;
+        			let diff_opacity = 0;
+
+        			// 以数组形式保存
+        			let scale = null;
+        			let diff_scale = cc.v2(0, 0);
+
+        			let color = null;
+        			let diff_color = cc.color(0, 0, 0);
+
+        			for (i; i < arr.length; i++) {
+        				if (typeof arr[i] === "number") {
+        					delayTime = arr[i];
+        				}
+        				else if (Array.isArray(arr[i])) {
+        					if (arr[i].length === 1) { // 透明度
+        						opacity = arr[i][0];
+        					}
+        					else { //缩放
+        						scale = arr[i];
+        					}
+        				}
+        				else if (cc.js.getClassName(arr[i]) === "cc.Vec2") {
+        					pos = arr[i];
+        				}
+        				else {
+        					return cc.error("tz 这个类型我不知道怎么处理", arr[i]);
+        				}
+        			}
+
+        			for (i = 0; i < diffArr.length; i++) {
+        				if (typeof diffArr[i] === "number") {
+        					diff_delayTime = diffArr[i];
+        				}
+        				else if (Array.isArray(diffArr[i])) {
+        					if (diffArr[i].length === 1) { // 透明度
+        						diff_opacity = diffArr[i][0];
+        						if (opacity === null) {
+        							opacity = true;
+        						}
+        					}
+        					else { //缩放
+        						diff_scale = diffArr[i];
+        						if (scale === null) {
+        							scale = true;
+        						}
+        					}
+        				}
+        				else if (cc.js.getClassName(diffArr[i]) === "cc.Vec2") {
+        					diff_pos = diffArr[i];
+        					if (pos === null) {
+        						pos = true;
+        					}
+        				}
+        				else if (cc.js.getClassName(diffArr[i]) === "cc.Color") {
+        					diff_color = diffArr[i];
+        					if (color === null) {
+        						color = true;
+        					}
+        				}
+        				else {
+        					return cc.error("tz 这个类型我不知道怎么处理", diffArr[i]);
+        				}
+        			}
+
+        			let addId = 0;
+        			let toByEndFun = null;
+        			let tmpAdd = function (num) {
+        				addId = num;
+        			}
+        			let tmpDel = function () {
+        				// cc.log("tmpDel");
+        				addId--;
+        				if (addId === 0) {
+        					toByEndFun();
+        				}
+        			}
+        			// 根据基本数据 跟 diff数据，生成动作。 缓冲还没有添加
+        			let addActFun = function(act1, tmpNode) {
+        				let cb = cc.callFunc(tmpDel);
+        				let seq = cc.sequence(act1, cb);
+        				// cc.log("act", act1, tmpNode);
+        				seq.node = tmpNode;
+        				actArr.push(seq);
+        			}
+        			if (actName === "to") {
+	        			for (i = 0; i < nodeArr.length; i++) {
+	        				let tmpNode = nodeArr[i];
+	        				let t = i * diff_delayTime + delayTime;
+
+	        				if (pos === true) {
+	        					let move = cc.moveTo(t, diff_pos.mul(i).add(tmpNode));
+	        					addActFun(move, tmpNode);
+	        				}
+	        				else if (pos) { 
+	        					// cc.log("pos", t, diff_pos.mul(i).add(pos));
+	        					let move = cc.moveTo(t, diff_pos.mul(i).add(pos));
+	        					addActFun(move, tmpNode);
+	        				}
+
+	        				if (opacity === true) {
+	        					let fade = cc.fadeTo(t, diff_opacity * i + tmpNode.opacity);
+	        					addActFun(fade, tmpNode);
+	        				}
+	        				else if (opacity !== null) {
+	        					let fade = cc.fadeTo(t, diff_opacity * i + opacity);
+	        					addActFun(fade, tmpNode);
+	        				}
+
+	        				if (scale === true) {
+	        					let act1 = cc.scaleTo(t, diff_scale[0] * i + tmpNode.scaleX, diff_scale[1] * i + tmpNode.scaleY);
+	        					addActFun(act1, tmpNode);
+	        				}
+	        				else if (scale !== null) {
+	        					let act1 = cc.scaleTo(t, diff_scale[0] * i + scale[0], diff_scale[1] * i + scale[1]);
+	        					addActFun(act1, tmpNode);	
+	        				}
+
+	        				if (color === true) {
+	        					let {r, g, b} = diff_color;
+	        					let act1 = cc.tintTo(t, r * i + tmpNode.color.r, g * i + tmpNode.color.g, b * i + tmpNode.color.b);
+	        					addActFun(act1, tmpNode);
+	        				}
+	        				else if (color !== null) {
+	        					let {r, g, b} = diff_color;
+	        					let act1 = cc.tintTo(t, r * i + color.r, g * i + color.g, b * i + color.b);
+	        					addActFun(act1, tmpNode);	
+	        				}
+
+	        			}
+        			}
+        			else if (actName === "by") {
+        				if (color === true) {
+        					color = cc.color(0, 0, 0);
+        				}
+        				if (opacity === true) {
+        					opacity = 0;
+        				}
+        				if (scale === true) {
+        					scale = [0, 0];
+        				}
+        				if (pos === true) {
+        					pos = cc.v2(0, 0);
+        				}
+        				for (i = 0; i < nodeArr.length; i++) {
+        					let tmpNode = nodeArr[i];
+	        				let t = i * diff_delayTime + delayTime;
+
+	        				if (pos) { 
+	        					let move = cc.moveBy(t, diff_pos.mul(i).add(pos));
+	        					addActFun(move, tmpNode);
+	        				}
+
+	        				if (opacity !== null) {
+	        					let fade = cc.fadeTo(t, diff_opacity * i + opacity + tmpNode.opacity);
+	        					addActFun(fade, tmpNode);
+	        				}
+
+	        				if (scale !== null) {
+	        					let act1 = cc.scaleBy(t, diff_scale[0] * i + scale[0], diff_scale[1] * i + scale[1]);
+	        					addActFun(act1, tmpNode);	
+	        				}
+
+	        				if (color !== null) {
+	        					let {r, g, b} = diff_color;
+	        					let act1 = cc.tintBy(t, r * i + color.r, g * i + color.g, b * i + color.b);
+	        					addActFun(act1, tmpNode);	
+	        				}
+        				}
+        			}
+        			else {
+        				cc.error("tz 这个actName突然变得好奇怪，不是to也不是by", actName);
+        			}
+        			let toOrByFun = function (end) {
+        				toByEndFun = end;
+        				// stopActArr = [];
+        				tmpAdd(actArr.length + 1);
+        				for (let i = 0; i < actArr.length; i++) {
+        					// stopActArr.push({node: actArr[i].node, act: actArr[i]});
+        					// cc.log(i, actArr[i]);
+        					actArr[i].node.runAction(actArr[i]);
+        				}
+        				tmpDel();
+        				return true;
+        			}
+        			toOrByFun.actName = actName;
+        			toOrByFun.actArr = actArr;
+        			act = toOrByFun;
         		}
         		else {
         			if (typeof node !== "object" || (!node.getChildren)) {

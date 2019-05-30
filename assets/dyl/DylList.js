@@ -35,7 +35,7 @@ cc.Class({
 
     	this.isVertical = (this.dir === Dir.up) || (this.dir === Dir.down);
     	this.t = 0;
-    	cc.kk = this;
+    	// cc.kk = this;
     	this.addFun = null; // 这是新显示节点时触发的 fun(id, node)
     	this.buttonFun = null; // 点击节点触发的 fun (id, node)
     	this.runFun = null; // 自动动作的update取消函数
