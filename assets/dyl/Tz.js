@@ -384,6 +384,12 @@ window.tz = function (node, ...argArr) {
         		}
         		// 参数 [nodeArr]? [差别数组]? node? 时间 = 0 
         		else if (actName === "to" || actName === "by") {
+        			let ease = null;
+        			let easeType = arr[arr.length - 1];
+        			if ((typeof easeType === "object") && (typeof easeType.easing === "function") && (typeof easeType.reverse === "function")) {
+        				arr.pop();
+        				ease = easeType;
+        			}
         			arr = [node, ...arr];
         			// cc.log(arr);
         			let i = 0;
@@ -502,6 +508,9 @@ window.tz = function (node, ...argArr) {
         			// 根据基本数据 跟 diff数据，生成动作。 缓冲还没有添加
         			let addActFun = function(act1, tmpNode) {
         				let cb = cc.callFunc(tmpDel);
+        				if (ease) {
+	        				act1.easing(ease);
+	        			}
         				let seq = cc.sequence(act1, cb);
         				// cc.log("act", act1, tmpNode);
         				seq.node = tmpNode;
