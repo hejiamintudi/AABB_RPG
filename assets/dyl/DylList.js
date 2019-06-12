@@ -84,6 +84,7 @@ cc.Class({
 
 
     	// add 的初始化只能在第一次用，后面不能再用了
+        // add (addFun(id, node)?, buttonFun(id, node)?, maxNum) maxNum 0 为无穷
     	this.node.add = (...arr)=>{
     		if (typeof arr[0] !== "number") {
     			this.addFun = null;

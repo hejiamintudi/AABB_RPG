@@ -382,7 +382,10 @@ window.tz = function (node, ...argArr) {
         			act = createSampleAct(node, ...arr);
         			act.actName = node;
         		}
-        		// 参数 [nodeArr]? [差别数组]? node? 时间 = 0 
+        		// 参数 [nodeArr / node]? [差别数组]?  ...other
+        		// funArr (id) 根据返回值的类型来增加或者修改这个id节点的动作
+        		// diff_funArr (id) 偏移量 是相对于前一个来对比的
+         		// 变化的类型都必需要在普通类型里面有定义（延时除外），否则会报错
         		else if (actName === "to" || actName === "by") {
         			let ease = null;
         			let easeType = arr[arr.length - 1];
@@ -396,96 +399,161 @@ window.tz = function (node, ...argArr) {
         			let nodeArr = null;
         			let actArr = [];
         			let diffArr = [];
-        			for (i; i < arr.length; i++) {
-        				// cc.log("arr", i, arr[i], Array.isArray(arr[i]));
-        				if (Array.isArray(arr[i])) {
-        					if (typeof arr[i][0].getChildren === "function") {
-        						nodeArr = arr[i];
-        					}
-        					else {
-        						diffArr = arr[i];
-        					}
-        				}
-        				else {
-        					break;
-        				}
-        			}
 
-        			// cc.log("nodeArr", nodeArr);
-        			if (typeof arr[i].getChildren === "function") {
-        				if (nodeArr) {
-        					return cc.error("tz 已经有了数组，那就别再加节点了", arr[i]);
-        				}
+        			let funArr = [];
+        			let diff_funArr = [];
+
+        			// 给动作指定节点数组 判断第一个参数，节点或节点数组
+        			if (Array.isArray(arr[i])) {
+        				if (typeof arr[i][0].getChildren === "function") {
+    						nodeArr = arr[i];
+    						i++;
+    					}
+        			}
+        			else if (typeof arr[i].getChildren === "function") {
         				nodeArr = [arr[i]];
         				i++;
         			}
-        			else if (!nodeArr){
+        			if (!nodeArr) {
         				nodeArr = [defaultNode];
         			}
+
+        			// 偏移数组
+        			if (Array.isArray(arr[i])) {
+        				diffArr = arr[i];
+    					i++;
+        			}
+
+        			// // 初始化节点数组 和 偏移数组
+        			// for (i; i < arr.length; i++) {
+        			// 	// cc.log("arr", i, arr[i], Array.isArray(arr[i]));
+        			// 	if (Array.isArray(arr[i])) {
+        			// 		if (typeof arr[i][0].getChildren === "function") {
+        			// 			nodeArr = arr[i];
+        			// 		}
+        			// 		else {
+        			// 			diffArr = arr[i];
+        			// 		}
+        			// 	}
+        			// 	else {
+        			// 		break;
+        			// 	}
+        			// }
+
+        			// // 节点数组的补充，就是非数组的时候，可能直接是一个节点，或者默认节点
+        			// if (typeof arr[i].getChildren === "function") {
+        			// 	if (nodeArr) {
+        			// 		return cc.error("tz 已经有了数组，那就别再加节点了", arr[i]);
+        			// 	}
+        			// 	nodeArr = [arr[i]];
+        			// 	i++;
+        			// }
+        			// else if (!nodeArr){
+        			// 	nodeArr = [defaultNode];
+        			// }
+
+
         			let delayTime = 0;
         			let diff_delayTime = 0;
+        			let now_diff_delayTime = 0;
 
-        			let pos = null;
-        			let diff_pos = cc.v2(0, 0);
+        			let tab = {
+        				pos: null,
+        				diff_pos: cc.v2(0, 0),
+        				now_diff_pos: cc.v2(0, 0),
 
-        			let opacity = null;
-        			let diff_opacity = 0;
+        				opacity: null,
+        				diff_opacity: 0,
+        				now_diff_opacity: 0,
 
-        			// 以数组形式保存
-        			let scale = null;
-        			let diff_scale = cc.v2(0, 0);
+        				// 以数组形式保存
+        				scale: null,
+        				diff_scale: [0, 0],
+        				now_diff_scale: [0, 0],
 
-        			let color = null;
-        			let diff_color = cc.color(0, 0, 0);
+        				color: null,
+        				diff_color: cc.color(0, 0, 0),
+        				now_diff_color: cc.color(0, 0, 0)
+        			};
 
+        			// let pos = null;
+        			// let diff_pos = cc.v2(0, 0);
+        			// let now_diff_pos = cc.v2(0, 0);
+
+        			// let opacity = null;
+        			// let diff_opacity = 0;
+        			// let now_diff_opacity = 0;
+
+        			// // 以数组形式保存
+        			// let scale = null;
+        			// let diff_scale = [0, 0];
+        			// let now_diff_scale = [0, 0];
+
+        			// let color = null;
+        			// let diff_color = cc.color(0, 0, 0);
+        			// let now_diff_color = cc.color(0, 0, 0);
+
+        			// 把后面的参数都初始化，数组，数字，颜色，函数，位置
         			for (i; i < arr.length; i++) {
         				if (typeof arr[i] === "number") {
         					delayTime = arr[i];
         				}
+        				else if (typeof arr[i] === "function") {
+        					funArr.push(arr[i]);
+        				}
         				else if (Array.isArray(arr[i])) {
         					if (arr[i].length === 1) { // 透明度
-        						opacity = arr[i][0];
+        						tab.opacity = arr[i][0];
         					}
         					else { //缩放
-        						scale = arr[i];
+        						tab.scale = arr[i];
         					}
         				}
         				else if (cc.js.getClassName(arr[i]) === "cc.Vec2") {
-        					pos = arr[i];
+        					tab.pos = arr[i];
         				}
         				else {
         					return cc.error("tz 这个类型我不知道怎么处理", arr[i]);
         				}
         			}
-
+        			cc.log("0 funArr", funArr);
+        			// 处理偏移节点的内容
         			for (i = 0; i < diffArr.length; i++) {
         				if (typeof diffArr[i] === "number") {
         					diff_delayTime = diffArr[i];
+        					now_diff_delayTime = -diff_delayTime;
+        				}
+        				else if (typeof diffArr[i] === "function") {
+        					diff_funArr.push(diffArr[i]);
         				}
         				else if (Array.isArray(diffArr[i])) {
         					if (diffArr[i].length === 1) { // 透明度
-        						diff_opacity = diffArr[i][0];
-        						if (opacity === null) {
-        							opacity = true;
+        						tab.diff_opacity = diffArr[i][0];
+        						if (tab.opacity === null) {
+        							return cc.error("tz 有偏移透明度，但没有固定透明度赋值 [number]");
+        							// opacity = true;
         						}
         					}
         					else { //缩放
-        						diff_scale = diffArr[i];
-        						if (scale === null) {
-        							scale = true;
+        						tab.diff_scale = diffArr[i];
+        						if (tab.scale === null) {
+        							return cc.error("tz 有偏移缩放，但没有固定缩放赋值 [number, number]");
+        							// scale = true;
         						}
         					}
         				}
         				else if (cc.js.getClassName(diffArr[i]) === "cc.Vec2") {
-        					diff_pos = diffArr[i];
-        					if (pos === null) {
-        						pos = true;
+        					tab.diff_pos = diffArr[i];
+        					if (tab.pos === null) {
+        						return cc.error("tz 有偏移位置, 但没有固定位置");
+        						// pos = true;
         					}
         				}
         				else if (cc.js.getClassName(diffArr[i]) === "cc.Color") {
-        					diff_color = diffArr[i];
-        					if (color === null) {
-        						color = true;
+        					tab.diff_color = diffArr[i];
+        					if (tab.color === null) {
+        						return cc.error("tz 有偏移颜色, 但没有固定颜色");
+        						// color = true;
         					}
         				}
         				else {
@@ -505,100 +573,297 @@ window.tz = function (node, ...argArr) {
         					toByEndFun();
         				}
         			}
-        			// 根据基本数据 跟 diff数据，生成动作。 缓冲还没有添加
-        			let addActFun = function(act1, tmpNode) {
+        			// 根据基本数据 跟 diff数据，生成动作
+        			let addActFun = function(act1, tmpNode, dt) {
         				let cb = cc.callFunc(tmpDel);
         				if (ease) {
 	        				act1.easing(ease);
 	        			}
-        				let seq = cc.sequence(act1, cb);
+	        			let seq = null;
+	        			if (dt > 0.000001) {
+        					let dtAct = cc.delayTime(dt);
+        					seq = cc.sequence(dtAct, act1, cb);
+	        			}
+	        			else {
+	        				seq = cc.sequence(act1, cb);	
+	        			}
         				// cc.log("act", act1, tmpNode);
         				seq.node = tmpNode;
         				actArr.push(seq);
         			}
+
+        			let getFunArrData = function (i, arr) {
+        				let data = {};
+        				for (let j = 0; j < arr.length; j++) {
+        					let value = arr[j](i);
+        					if (typeof value === "number") {
+        						data.time = value;
+        					}
+        					else if (Array.isArray(value)) {
+        						if (value.length === 1) {
+        							data.opacity = value[0];
+        						}
+        						else {
+        							data.scale = value;
+        						}
+        					}
+        					else if (cc.js.getClassName(value) === "cc.Vec2") {
+        						data.pos = value;
+        					}
+        					else if (cc.js.getClassName(value) === "cc.Color") {
+        						data.color = value;
+        					}
+        				}
+        				return data;
+        			}
+
         			if (actName === "to") {
 	        			for (i = 0; i < nodeArr.length; i++) {
+	        				let funData = getFunArrData(i, funArr);
+	        				let diff_funData = getFunArrData(i, diff_funArr);
+
 	        				let tmpNode = nodeArr[i];
-	        				let t = i * diff_delayTime + delayTime;
-
-	        				if (pos === true) {
-	        					let move = cc.moveTo(t, diff_pos.mul(i).add(tmpNode));
-	        					addActFun(move, tmpNode);
+	        				let t = delayTime;
+	        				if (typeof funData.time === "number") {
+	        					t = funData.time;
 	        				}
-	        				else if (pos) { 
-	        					// cc.log("pos", t, diff_pos.mul(i).add(pos));
-	        					let move = cc.moveTo(t, diff_pos.mul(i).add(pos));
-	        					addActFun(move, tmpNode);
+	        				if (typeof diff_funData.time === "number") {
+	        					now_diff_delayTime = diff_funData.time;
 	        				}
-
-	        				if (opacity === true) {
-	        					let fade = cc.fadeTo(t, diff_opacity * i + tmpNode.opacity);
-	        					addActFun(fade, tmpNode);
-	        				}
-	        				else if (opacity !== null) {
-	        					let fade = cc.fadeTo(t, diff_opacity * i + opacity);
-	        					addActFun(fade, tmpNode);
+	        				else {
+	        					now_diff_delayTime += diff_delayTime;
 	        				}
 
-	        				if (scale === true) {
-	        					let act1 = cc.scaleTo(t, diff_scale[0] * i + tmpNode.scaleX, diff_scale[1] * i + tmpNode.scaleY);
-	        					addActFun(act1, tmpNode);
-	        				}
-	        				else if (scale !== null) {
-	        					let act1 = cc.scaleTo(t, diff_scale[0] * i + scale[0], diff_scale[1] * i + scale[1]);
-	        					addActFun(act1, tmpNode);	
+	        				let getAct = function (name, value) {
+	        					if (name === "pos") {
+	        						return cc.moveTo(t, value);
+	        					}
+	        					else if (name === "opacity") {
+	        						return cc.fadeTo(t, value);
+	        					}
+	        					else if (name === "scale") {
+	        						return cc.scaleTo(t, value[0], value[1]);
+	        					}
+	        					else if (name === "color") {
+	        						return cc.tintTo(t, value.r, value.g, value.b);
+	        					}
 	        				}
 
-	        				if (color === true) {
-	        					let {r, g, b} = diff_color;
-	        					let act1 = cc.tintTo(t, r * i + tmpNode.color.r, g * i + tmpNode.color.g, b * i + tmpNode.color.b);
-	        					addActFun(act1, tmpNode);
+	        				// 添加偏移值
+	        				let addDiff = function (name) {
+	        					if (name === "pos") {
+	        						tab.pos = tab.pos.add(tab.diff_pos);
+	        					}
+	        					else if (name === "opacity") {
+	        						tab.opacity += tab.diff_opacity;
+	        					}
+	        					else if (name === "scale") {
+	        						let [a0, a1] = tab.scale;
+	        						let [b0, b1] = tab.diff_scale;
+	        						tab.scale = [a0 + b0, a1 + b1];
+	        					}
+	        					else if (name === "color") {
+	        						let {r, g, b} = tab.diff_color;
+	        						tab.color = cc.color(tab.color.r + r, tab.color.g + g, tab.color.b + b);
+	        					}
 	        				}
-	        				else if (color !== null) {
-	        					let {r, g, b} = diff_color;
-	        					let act1 = cc.tintTo(t, r * i + color.r, g * i + color.g, b * i + color.b);
-	        					addActFun(act1, tmpNode);	
+
+	        				let setData = function (name) {
+	        					if (diff_funData[name]) {
+	        						tab["diff_" + name] = diff_funData[name];
+	        					}
+	        					if (funData[name]) {
+	        						let	act = getAct(name, funData[name]);
+	        						addActFun(act, tmpNode, now_diff_delayTime);
+	        						if (tab[name] !== null) {
+	        							tab[name] = funData[name];
+	        							addDiff(name);
+	        						}
+	        					}
+	        					else if (tab[name] !== null) {
+	        						let act = getAct(name, tab[name]);
+	        						addActFun(act, tmpNode, now_diff_delayTime);
+	        						addDiff(name);
+	        					}
 	        				}
+
+	        				setData("pos");
+	        				setData("opacity");
+	        				setData("scale");
+	        				setData("color");
+	        				
+							// if (pos === true) {
+// 	        					let move = cc.moveTo(t, diff_pos.mul(i).add(tmpNode));
+// 	        					addActFun(move, tmpNode, i * diff_delayTime);
+// 	        				}
+// 	        				else if (pos) { 
+// 	        					// cc.log("pos", t, diff_pos.mul(i).add(pos));
+// 	        					let move = cc.moveTo(t, diff_pos.mul(i).add(pos));
+// 	        					addActFun(move, tmpNode, i * diff_delayTime);
+// 	        				}
+
+// 	        				if (opacity === true) {
+// 	        					let fade = cc.fadeTo(t, diff_opacity * i + tmpNode.opacity);
+// 	        					addActFun(fade, tmpNode, i * diff_delayTime);
+// 	        				}
+// 	        				else if (opacity !== null) {
+// 	        					let fade = cc.fadeTo(t, diff_opacity * i + opacity);
+// 	        					addActFun(fade, tmpNode, i * diff_delayTime);
+// 	        				}
+
+// 	        				if (scale === true) {
+// 	        					let act1 = cc.scaleTo(t, diff_scale[0] * i + tmpNode.scaleX, diff_scale[1] * i + tmpNode.scaleY);
+// 	        					addActFun(act1, tmpNode, i * diff_delayTime);
+// 	        				}
+// 	        				else if (scale !== null) {
+// 	        					let act1 = cc.scaleTo(t, diff_scale[0] * i + scale[0], diff_scale[1] * i + scale[1]);
+// 	        					addActFun(act1, tmpNode, i * diff_delayTime);	
+// 	        				}
+
+// 	        				if (color === true) {
+// 	        					let {r, g, b} = diff_color;
+// 	        					let act1 = cc.tintTo(t, r * i + tmpNode.color.r, g * i + tmpNode.color.g, b * i + tmpNode.color.b);
+// 	        					addActFun(act1, tmpNode, i * diff_delayTime);
+// 	        				}
+// 	        				else if (color !== null) {
+// 	        					let {r, g, b} = diff_color;
+// 	        					let act1 = cc.tintTo(t, r * i + color.r, g * i + color.g, b * i + color.b);
+// 	        					addActFun(act1, tmpNode, i * diff_delayTime);	
+// 	        				}
 
 	        			}
         			}
         			else if (actName === "by") {
-        				if (color === true) {
-        					color = cc.color(0, 0, 0);
-        				}
-        				if (opacity === true) {
-        					opacity = 0;
-        				}
-        				if (scale === true) {
-        					scale = [0, 0];
-        				}
-        				if (pos === true) {
-        					pos = cc.v2(0, 0);
-        				}
+        				// if (color === true) {
+        				// 	color = cc.color(0, 0, 0);
+        				// }
+        				// if (opacity === true) {
+        				// 	opacity = 0;
+        				// }
+        				// if (scale === true) {
+        				// 	scale = [0, 0];
+        				// }
+        				// if (pos === true) {
+        				// 	pos = cc.v2(0, 0);
+        				// } 
         				for (i = 0; i < nodeArr.length; i++) {
-        					let tmpNode = nodeArr[i];
-	        				let t = i * diff_delayTime + delayTime;
+        					let funData = getFunArrData(i, funArr);
+	        				let diff_funData = getFunArrData(i, diff_funArr);
 
-	        				if (pos) { 
-	        					let move = cc.moveBy(t, diff_pos.mul(i).add(pos));
-	        					addActFun(move, tmpNode);
+	        				let tmpNode = nodeArr[i];
+	        				let t = delayTime;
+	        				if (typeof funData.time === "number") {
+	        					t = funData.time;
+	        				}
+	        				if (typeof diff_funData.time === "number") {
+	        					now_diff_delayTime = diff_funData.time;
+	        				}
+	        				else {
+	        					now_diff_delayTime += diff_delayTime;
 	        				}
 
-	        				if (opacity !== null) {
-	        					let fade = cc.fadeTo(t, diff_opacity * i + opacity + tmpNode.opacity);
-	        					addActFun(fade, tmpNode);
+	        				let getAct = function (name, value) {
+	        					if (name === "pos") {
+	        						return cc.moveBy(t, value);
+	        					}
+	        					else if (name === "opacity") {
+	        						return cc.fadeTo(t, value + tmpNode.opacity);
+	        					}
+	        					else if (name === "scale") {
+	        						return cc.scaleBy(t, value[0], value[1]);
+	        					}
+	        					else if (name === "color") {
+	        						return cc.tintBy(t, value.r, value.g, value.b);
+	        					}
 	        				}
 
-	        				if (scale !== null) {
-	        					let act1 = cc.scaleBy(t, diff_scale[0] * i + scale[0], diff_scale[1] * i + scale[1]);
-	        					addActFun(act1, tmpNode);	
+	        				let addValue = function (name, v1, v2) {
+	        					if (name === "pos") {
+	        						// tab.pos = tab.pos.add(tab.diff_pos);
+	        						return v1.add(v2);
+	        					}
+	        					else if (name === "opacity") {
+	        						return v1 + v2;
+	        					}
+	        					else if (name === "scale") {
+	        						let [a0, a1] = v1;
+	        						let [b0, b1] = v2;
+	        						return [a0 + b0, a1 + b1];
+	        					}
+	        					else if (name === "color") {
+	        						let {r, g, b} = v1;
+	        						return cc.color(v2.r + r, v2.g + g, v2.b + b);
+	        					}
 	        				}
 
-	        				if (color !== null) {
-	        					let {r, g, b} = diff_color;
-	        					let act1 = cc.tintBy(t, r * i + color.r, g * i + color.g, b * i + color.b);
-	        					addActFun(act1, tmpNode);	
+	        				// 添加偏移值
+	        				let addDiff = function (name) {
+	        					tab["now_diff_" + name] = addValue(name, tab["now_diff_" + name], tab["diff_" + name]);
+	        					// if (name === "pos") {
+	        					// 	// tab.pos = tab.pos.add(tab.diff_pos);
+	        					// 	tab.now_diff_pos = tab.now_diff_pos.add(tab.diff_pos);
+	        					// }
+	        					// else if (name === "opacity") {
+	        					// 	// tab.opacity += tab.diff_opacity;
+	        					// 	tab.now_diff_opacity += tab.diff_opacity;
+	        					// }
+	        					// else if (name === "scale") {
+	        					// 	let [a0, a1] = tab.now_diff_scale;
+	        					// 	let [b0, b1] = tab.diff_scale;
+	        					// 	tab.now_diff_scale = [a0 + b0, a1 + b1];
+	        					// }
+	        					// else if (name === "color") {
+	        					// 	let {r, g, b} = tab.diff_color;
+	        					// 	tab.now_diff_color = cc.color(tab.now_diff_color.r + r, tab.now_diff_color.g + g, tab.now_diff_color.b + b);
+	        					// }
 	        				}
+
+	        				let setData = function (name) {
+	        					if (diff_funData[name]) {
+	        						tab["diff_" + name] = diff_funData[name];
+	        					}
+	        					if (funData[name]) {
+	        						let	act = getAct(name, funData[name]);
+	        						addActFun(act, tmpNode, now_diff_delayTime);
+	        						if (tab[name] !== null) {
+	        							tab[name] = funData[name];
+	        						}
+	        					}
+	        					else if (tab[name] !== null) {
+	        						let act = getAct(name, addValue(name, tab[name], tab["now_diff_" + name]));
+	        						addActFun(act, tmpNode, now_diff_delayTime);
+	        						addDiff(name);
+	        					}
+	        				}
+
+	        				setData("pos");
+	        				setData("opacity");
+	        				setData("scale");
+	        				setData("color");
+	        				
+        					// let tmpNode = nodeArr[i];
+	        				// let t = i * diff_delayTime + delayTime;
+
+	        				// if (pos) { 
+	        				// 	let move = cc.moveBy(t, diff_pos.mul(i).add(pos));
+	        				// 	addActFun(move, tmpNode, i * diff_delayTime);
+	        				// }
+
+	        				// if (opacity !== null) {
+	        				// 	let fade = cc.fadeTo(t, diff_opacity * i + opacity + tmpNode.opacity);
+	        				// 	addActFun(fade, tmpNode, i * diff_delayTime);
+	        				// }
+
+	        				// if (scale !== null) {
+	        				// 	let act1 = cc.scaleBy(t, diff_scale[0] * i + scale[0], diff_scale[1] * i + scale[1]);
+	        				// 	addActFun(act1, tmpNode, i * diff_delayTime);	
+	        				// }
+
+	        				// if (color !== null) {
+	        				// 	let {r, g, b} = diff_color;
+	        				// 	let act1 = cc.tintBy(t, r * i + color.r, g * i + color.g, b * i + color.b);
+	        				// 	addActFun(act1, tmpNode, i * diff_delayTime);	
+	        				// }
         				}
         			}
         			else {

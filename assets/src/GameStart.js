@@ -92,7 +92,7 @@ cc.Class({
     // },
 
     buttonOn (node) {
-        cc.log("buttonOn", this.node.touch);
+        // cc.log("buttonOn", this.node.touch);
         this[this.node.touch + "Button"](node);
     },
 
