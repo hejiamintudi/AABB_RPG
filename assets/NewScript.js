@@ -25,7 +25,25 @@ cc.Class({
                 return oriP.add(cc.v2(0, d * id / 4));
             }
         }
-        cc.kk = tz().to([...arr], [cc.v2(d, 0)], 0, oriP, posFun)();
+        let colorFun = function (id) {
+            if (id === 4) {
+                return cc.color(0, 255, 0);
+            }
+            if (id === 8) {
+                return cc.color(0, 0, 255);
+            }
+            if (id === 12) {
+                return cc.color(255, 122, 0);
+            }
+        }
+        cc.kk = tz().to([...arr], [cc.v2(d, 0)], 0, oriP, posFun)
+                    .to([...arr], 0, cc.color(0, 0, 0))
+                    .by([...arr], cc.v2(1000, 0))
+                    ._by([...arr], [0.1], 1, cc.v2(-1000, 0))
+                     .to([...arr], [0.1, cc.color(10, 10, 10)], 1, cc.color(255, 0, 0), colorFun)
+                    ._by([...arr], [0.1], 1, [360])
+                    ();
+
 
     	// cc.kk = tz(hjm._b, "haha", ()=>{
     	// 	cc.log("nihao");

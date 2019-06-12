@@ -462,9 +462,9 @@ window.tz = function (node, ...argArr) {
         				diff_pos: cc.v2(0, 0),
         				now_diff_pos: cc.v2(0, 0),
 
-        				opacity: null,
-        				diff_opacity: 0,
-        				now_diff_opacity: 0,
+        				rotate: null,
+        				diff_rotate: 0,
+        				now_diff_rotate: 0,
 
         				// 以数组形式保存
         				scale: null,
@@ -503,7 +503,7 @@ window.tz = function (node, ...argArr) {
         				}
         				else if (Array.isArray(arr[i])) {
         					if (arr[i].length === 1) { // 透明度
-        						tab.opacity = arr[i][0];
+        						tab.rotate = arr[i][0];
         					}
         					else { //缩放
         						tab.scale = arr[i];
@@ -512,11 +512,14 @@ window.tz = function (node, ...argArr) {
         				else if (cc.js.getClassName(arr[i]) === "cc.Vec2") {
         					tab.pos = arr[i];
         				}
+        				else if (cc.js.getClassName(arr[i]) === "cc.Color") {
+        					tab.color = arr[i];
+        				}
         				else {
         					return cc.error("tz 这个类型我不知道怎么处理", arr[i]);
         				}
         			}
-        			cc.log("0 funArr", funArr);
+        			// cc.log("0 funArr", funArr);
         			// 处理偏移节点的内容
         			for (i = 0; i < diffArr.length; i++) {
         				if (typeof diffArr[i] === "number") {
@@ -527,9 +530,9 @@ window.tz = function (node, ...argArr) {
         					diff_funArr.push(diffArr[i]);
         				}
         				else if (Array.isArray(diffArr[i])) {
-        					if (diffArr[i].length === 1) { // 透明度
-        						tab.diff_opacity = diffArr[i][0];
-        						if (tab.opacity === null) {
+        					if (diffArr[i].length === 1) { // 角度
+        						tab.diff_rotate = diffArr[i][0];
+        						if (tab.rotate === null) {
         							return cc.error("tz 有偏移透明度，但没有固定透明度赋值 [number]");
         							// opacity = true;
         						}
@@ -601,7 +604,7 @@ window.tz = function (node, ...argArr) {
         					}
         					else if (Array.isArray(value)) {
         						if (value.length === 1) {
-        							data.opacity = value[0];
+        							data.rotate = value[0];
         						}
         						else {
         							data.scale = value;
@@ -638,8 +641,8 @@ window.tz = function (node, ...argArr) {
 	        					if (name === "pos") {
 	        						return cc.moveTo(t, value);
 	        					}
-	        					else if (name === "opacity") {
-	        						return cc.fadeTo(t, value);
+	        					else if (name === "rotate") {
+	        						return cc.rotateTo(t, value);
 	        					}
 	        					else if (name === "scale") {
 	        						return cc.scaleTo(t, value[0], value[1]);
@@ -654,8 +657,8 @@ window.tz = function (node, ...argArr) {
 	        					if (name === "pos") {
 	        						tab.pos = tab.pos.add(tab.diff_pos);
 	        					}
-	        					else if (name === "opacity") {
-	        						tab.opacity += tab.diff_opacity;
+	        					else if (name === "rotate") {
+	        						tab.rotate += tab.diff_rotate;
 	        					}
 	        					else if (name === "scale") {
 	        						let [a0, a1] = tab.scale;
@@ -688,7 +691,7 @@ window.tz = function (node, ...argArr) {
 	        				}
 
 	        				setData("pos");
-	        				setData("opacity");
+	        				setData("rotate");
 	        				setData("scale");
 	        				setData("color");
 	        				
@@ -766,8 +769,8 @@ window.tz = function (node, ...argArr) {
 	        					if (name === "pos") {
 	        						return cc.moveBy(t, value);
 	        					}
-	        					else if (name === "opacity") {
-	        						return cc.fadeTo(t, value + tmpNode.opacity);
+	        					else if (name === "rotate") {
+	        						return cc.rotateBy(t, value);
 	        					}
 	        					else if (name === "scale") {
 	        						return cc.scaleBy(t, value[0], value[1]);
@@ -782,7 +785,7 @@ window.tz = function (node, ...argArr) {
 	        						// tab.pos = tab.pos.add(tab.diff_pos);
 	        						return v1.add(v2);
 	        					}
-	        					else if (name === "opacity") {
+	        					else if (name === "rotate") {
 	        						return v1 + v2;
 	        					}
 	        					else if (name === "scale") {
@@ -837,7 +840,7 @@ window.tz = function (node, ...argArr) {
 	        				}
 
 	        				setData("pos");
-	        				setData("opacity");
+	        				setData("rotate");
 	        				setData("scale");
 	        				setData("color");
 	        				
