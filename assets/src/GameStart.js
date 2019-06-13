@@ -202,27 +202,46 @@ cc.Class({
             end();
             return;
         }
-        let actFun = (i, endFun)=>{
-            hand[i].active = true;
-            let data = hand[i].npcData;
-            let x = (dir > 0) ? (400 * (i - 1)) : -1500;
+        // let actFun = (i, endFun)=>{
+        //     hand[i].active = true;
+        //     let data = hand[i].npcData;
+        //     let x = (dir > 0) ? (400 * (i - 1)) : -1500;
+        //     if (dir > 0) {
+        //         hand[i].x = 1000 + 400 * i;
+        //     }
+        //     let t = Math.abs(hand[i].x - x) / speed;
+        //     let act = tz(hand[i], 0.1 * i).moveTo(t, x, hand[i].y);
+        //     if (dir < 0) {
+        //         act(()=>{
+        //             hand[i].x = 1500;
+        //             hand[i].active = false;
+        //         })
+        //     }
+        //     act(endFun)();
+        // }
+        // for (let i = 0; i < hand.length - 1; i++) {
+        //     actFun(i, ()=>null);
+        // }
+        // actFun(hand.length - 1, end);
+
+///////////////
+        let x = -1000 + (1 - hand.length) * 200
+        let preFun = function (id) {
+            hand[id].active = true;
             if (dir > 0) {
-                hand[i].x = 1000 + 400 * i;
+                hand[id].x = 1000 + 400 * id;
             }
-            let t = Math.abs(hand[i].x - x) / speed;
-            let act = tz(hand[i], 0.1 * i).moveTo(t, x, hand[i].y);
+        }
+        let endFun = function () {
             if (dir < 0) {
-                act(()=>{
+                for (let i = hand.length - 1; i >= 0; i--) {
                     hand[i].x = 1500;
                     hand[i].active = false;
-                })
+                }
             }
-            act(endFun)();
         }
-        for (let i = 0; i < hand.length - 1; i++) {
-            actFun(i, ()=>null);
-        }
-        actFun(hand.length - 1, end);
+        // let data = hand[i].npcData;
+        tz().by(hand, [0.3 * dir], 0.5, cc.v2(x * dir, 0), preFun)(endFun, end)();
 
         // let act = tz();
         // for (let i = 0; i < hand.length; i++) {

@@ -524,7 +524,12 @@ window.tz = function (node, ...argArr) {
         			for (i = 0; i < diffArr.length; i++) {
         				if (typeof diffArr[i] === "number") {
         					diff_delayTime = diffArr[i];
-        					now_diff_delayTime = -diff_delayTime;
+        					if (diff_delayTime < 0) {
+        						now_diff_delayTime = -diff_delayTime * nodeArr.length - diff_delayTime;
+        					}
+        					else {
+        						now_diff_delayTime = -diff_delayTime;
+        					}
         				}
         				else if (typeof diffArr[i] === "function") {
         					diff_funArr.push(diffArr[i]);
