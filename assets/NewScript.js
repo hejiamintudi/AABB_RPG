@@ -9,13 +9,13 @@ cc.Class({
         let t = 2;
         dyl.arr(arr, cc.color(255, 255, 0), 255, (i, node)=>{
             if (i === t) {
-                node.active = false;
+                // node.active = false;
+                // cc.nn = node;
                 t--;
                 return [hjm._c, hjm._d];
             }
         }, (i, node)=>{
-            node.num = i;
-            return cc.v2((i - 5) * 110, -100);
+            return cc.v2((i - 3) * 110, -100);
         }, (i, node)=>{
             if (i === 4) {
                 return 100;
@@ -27,7 +27,7 @@ cc.Class({
                 return 1000;
             }
 
-        })
+        }, i=>({num: i}));
     },
 
     // update (dt) {},
