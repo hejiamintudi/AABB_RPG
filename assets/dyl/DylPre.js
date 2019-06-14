@@ -1328,6 +1328,135 @@ window.initDylFun = function (cryptoJS) {
         }, duration * 1000);
     };
 
+// arr (nodeArr, ...arr)
+// num:透明度
+// [num]: 旋转角度
+// [num1, num2]: 缩放
+// color, vec2
+// bool: active
+// {index: value}: 直接修改节点上的某个元素
+// fun(id, node) ： 返回值会影响后面的变量
+// 函数返回值：上面的参数类型； null：删除当前节点； 节点数组 / 节点：替代当前节点
+    dyl.arr = function (nodeArr, ...arr) {
+        var tab = {
+            funArr: []
+        };
+
+        var i = 0;
+        // let customTab = {}; // 自定义变量
+        for (i = 0; i < arr.length; i++) {
+            var value = arr[i];
+            if (typeof value === "number") { // 透明度
+                tab.opacity = value;
+            }
+            else if (typeof value === "boolean") {
+                tab.active = value;
+            }
+            else if (Array.isArray(value)) {
+                if (value.length > 1) { // [n1, n2] 缩放
+                    tab.scale = cc.v2(value[0], value[1]);
+                }
+                else { // [num] 旋转角度
+                    tab.rotation = value[0];
+                }
+            }
+            else if (cc.js.getClassName(value) === "cc.Vec2") { // 位置
+                tab.position = value;
+            }
+            else if (cc.js.getClassName(value) === "cc.Color") {
+                tab.color = value;
+            }
+            else if (typeof value === "function") {
+                tab.funArr.push(value);
+            }
+            else if (typeof value === "object") {
+                for (let id in value) {
+                    tab[id] = value[id];
+                }
+            }
+            else {
+                cc.error("dyl.arr 这个参数类型没有考虑过", value);
+            }
+
+        }
+        
+        for (i = 0; i < nodeArr.length; i++) {
+            var node = nodeArr[i];
+            for (var j = 0; j < tab.funArr.length; j++) {
+                var value = tab.funArr[j](i, nodeArr[i]);
+                // cc.log("fun", value);
+
+                if (typeof value === "number") { // 透明度
+                    if (tab.opacity === undefined && i > 0) {
+                        return cc.error("之前并没有定义过number，函数返回不能是number, 除非位置是从0开始");
+                    }
+                    tab.opacity = value;
+                }
+                else if (typeof value === "boolean") {
+                    if (tab.active === undefined && i > 0) {
+                        return cc.error("之前并没有定义过bool，函数返回不能是bool, 除非位置是从0开始");
+                    }
+                    tab.active = value;
+                }
+                else if (Array.isArray(value) && (typeof value[0] === "number")) {
+                    if (value.length > 1) { // [n1, n2] 缩放
+                        if (tab.scale === undefined && i > 0) {
+                            return cc.error("之前并没有定义过[num1, num2]，函数返回不能是[num1, num2], 除非位置是从0开始");
+                        }
+                        tab.scale = cc.v2(value[0], value[1]);;
+                    }
+                    else { // [num] 旋转角度
+                        if (tab.rotation === undefined && i > 0) {
+                            return cc.error("之前并没有定义过[num]，函数返回不能是[num], 除非位置是从0开始");
+                        }
+                        tab.rotation = value[0];
+                    }
+                }
+                else if (Array.isArray(value)) {  // 删除并在当前位置补充节点数组
+                    nodeArr.splice(i, 1, ...value);
+                    i--;
+                    continue;
+                }
+                else if (value === null) { // 只是删除而已
+                    nodeArr.splice(i, 1);
+                    i--;
+                    continue;
+                }
+                else if (cc.js.getClassName(value) === "cc.Vec2") { // 位置
+                    if (tab.position === undefined && i > 0) {
+                        return cc.error("之前并没有定义过cc.Vec2，函数返回不能是cc.Vec2, 除非位置是从0开始");
+                    }
+                    tab.position = value;
+                }
+                else if (cc.js.getClassName(value) === "cc.Color") {
+                    if (tab.color === undefined && i > 0) {
+                        return cc.error("之前并没有定义过cc.Color，函数返回不能是cc.Color, 除非位置是从0开始");
+                    }
+                    tab.color = value;
+                }
+                else if (typeof value === "object") {
+                    for (let id in value) {
+                        if (tab[id] === undefined && i > 0) {
+                            return cc.error("之前并没有定义过这个id, 除非位置是从0开始", id);
+                        }
+                        tab[id] = value[id];
+                    }
+                }
+                else if (value === undefined) {
+                    continue;
+                }
+                else {
+                    cc.error("dyl.arr 000 这个参数类型没有考虑过", value);
+                }
+            }
+
+            for (var id in tab) {
+                // cc.log(id, tab[id])
+                node[id] = tab[id];
+            }
+        }
+    };
+
     // dyl.act = function (node, type, ...arr) {
     //     var resetArg = function (str) { //把变量统一变回对象
     //         if (arr.length < 2) {

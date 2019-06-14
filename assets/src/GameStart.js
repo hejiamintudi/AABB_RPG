@@ -241,7 +241,7 @@ cc.Class({
             }
         }
         // let data = hand[i].npcData;
-        tz().by(hand, [0.3 * dir], 0.5, cc.v2(x * dir, 0), preFun)(endFun, end)();
+        tz().by(hand, [0.3], 0.5, cc.v2(x, 0), preFun)(endFun, end)();
 
         // let act = tz();
         // for (let i = 0; i < hand.length; i++) {
