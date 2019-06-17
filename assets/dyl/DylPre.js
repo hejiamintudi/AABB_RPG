@@ -653,6 +653,7 @@ window.initDylFun = function (cryptoJS) {
     //     root();
     // };
 
+    // 现在改为直接输出原版的复制，包括把 _data的内容也赋值过来了
     dyl.data = function (key, node) {
         var arr = key.split(".");
         var data = dyl._data[arr[0]][arr[1]];
@@ -660,13 +661,30 @@ window.initDylFun = function (cryptoJS) {
             return cc.error("没有这个数据", key);
         }
         // cc.log("data", data, node);
-        for (var i in data) {
-            if (i !== "_data") {
-                // cc.log(i, data[i]);
-                node[i] = data[i];
+        var ans = {};
+        if (node) {
+            for (var i in data) {
+                if (i !== "_data") {
+                    // cc.log(i, data[i]);
+                    node[i] = data[i];
+                    ans[i] = data[i];
+                }
             }
         }
-        return data._data;
+        else {
+            for (var i in data) {
+                if (i !== "_data") {
+                    ans[i] = data[i];
+                }
+            }
+
+        }
+        var _data = data._data;
+        for (var i in _data) {
+            ans[i] = _data[i];
+        }
+        // return data._data;
+        return ans;
     };
 
     dyl.process = function (js, arr, isLog) {
@@ -1016,19 +1034,39 @@ window.initDylFun = function (cryptoJS) {
     //     counter();
     // };
 
-    dyl.update = function (fun) {
-        fun.id = updateFunArr.length;
-        updateFunArr.push(fun);
-        var delFun = function delFun() {
-            if (fun._dylIsDel) {
-                // 已经被删除了
+    dyl.update = function (arg) {
+        var fun = null;
+        if (arg) {
+            fun = arg;
+            fun.id = updateFunArr.length;
+            updateFunArr.push(fun);
+        }
+        var delFun = function delFun(newFun) {
+            // cc.log(fun._dylIsDel);
+            if (fun && (!fun._dylIsDel) && newFun) {
+                var id = fun.id;
+                updateFunArr[id] = newFun;
+                fun = newFun;
+                fun.id = id;
                 return;
             }
-            fun._dylIsDel = true;
+            else if (newFun) {
+                fun = newFun;
+                fun.id = updateFunArr.length;
+                updateFunArr.push(fun);
+                return;
+            }
+            else if (!fun || fun._dylIsDel) {
+                // 已经被删除了
+                fun = null;
+                return;
+            }
+            // fun._dylIsDel = true;
             var id = fun.id;
             updateFunArr[id] = updateFunArr[updateFunArr.length - 1];
             updateFunArr[id].id = id;
             updateFunArr.length--;
+            fun = null;
         };
         return delFun;
     };

@@ -252,7 +252,7 @@ window.tz = function (node, ...argArr) {
 			}
 		}
 		else {
-			cc.error("参数有问题,这里不接受其他参数");
+			cc.error("参数有问题,这里不接受其他参数", data);
 		}
 		if (typeof act === "function") {
 			act.node = defaultNode;
@@ -525,7 +525,7 @@ window.tz = function (node, ...argArr) {
         				if (typeof diffArr[i] === "number") {
         					diff_delayTime = diffArr[i];
         					if (diff_delayTime < 0) {
-        						now_diff_delayTime = -diff_delayTime * nodeArr.length - diff_delayTime;
+        						now_diff_delayTime = -diff_delayTime * nodeArr.length;
         					}
         					else {
         						now_diff_delayTime = -diff_delayTime;
@@ -600,10 +600,10 @@ window.tz = function (node, ...argArr) {
         				actArr.push(seq);
         			}
 
-        			let getFunArrData = function (i, arr) {
+        			let getFunArrData = function (i, arr, node) {
         				let data = {};
         				for (let j = 0; j < arr.length; j++) {
-        					let value = arr[j](i);
+        					let value = arr[j](i, node);
         					if (typeof value === "number") {
         						data.time = value;
         					}
@@ -627,10 +627,11 @@ window.tz = function (node, ...argArr) {
 
         			if (actName === "to") {
 	        			for (i = 0; i < nodeArr.length; i++) {
-	        				let funData = getFunArrData(i, funArr);
-	        				let diff_funData = getFunArrData(i, diff_funArr);
-
 	        				let tmpNode = nodeArr[i];
+
+	        				let funData = getFunArrData(i, funArr, tmpNode);
+	        				let diff_funData = getFunArrData(i, diff_funArr, tmpNode);
+
 	        				let t = delayTime;
 	        				if (typeof funData.time === "number") {
 	        					t = funData.time;
@@ -755,10 +756,11 @@ window.tz = function (node, ...argArr) {
         				// 	pos = cc.v2(0, 0);
         				// } 
         				for (i = 0; i < nodeArr.length; i++) {
-        					let funData = getFunArrData(i, funArr);
-	        				let diff_funData = getFunArrData(i, diff_funArr);
-
 	        				let tmpNode = nodeArr[i];
+
+        					let funData = getFunArrData(i, funArr, tmpNode);
+	        				let diff_funData = getFunArrData(i, diff_funArr, tmpNode);
+
 	        				let t = delayTime;
 	        				if (typeof funData.time === "number") {
 	        					t = funData.time;

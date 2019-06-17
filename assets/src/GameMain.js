@@ -1332,56 +1332,47 @@ cc.Class({
         }
         fun("atk");
         fun("def");
-        // if (showNode.atk > 0) {
-        //     showNode.atkLab = playColor;
-        //     showNode.atk = true;
+
+        let showSkillStr = "";
+        let addStrToShowSkillStr = function (str) {
+            if (showSkillStr) {
+                showSkillStr += "\n";
+            }
+            showSkillStr += str;
+        }
+        if (data.mainSkillStr) {
+            let str = "技能(" + String(data.skillNum) + ")：" + data.mainSkillStr;
+            addStrToShowSkillStr(str);
+        }
+        if (data.friendSkillStr) {
+            let str = "辅助：" + data.friendSkillStr;
+            addStrToShowSkillStr(str);
+        }
+        showNode.skillStr = showSkillStr;
+
+        // showNode.mainSkillLab = playColor;
+
+        // let y = 0;
+        // let d = 230;
+        // if (data.mainSkill) {
+        //     showNode.mainSkill = true;
+        //     showNode.mainSkill = cc.v2(true, y);
+        //     y -= d;
         // }
         // else {
-        //     showNode.atkLab = stopColor;
-        //     showNode.atk = false;
+        //     showNode.mainSkill = false;
+        //     // showNode.mainSkill = cc.v2(true, y);   
         // }
 
-        // if (isNaN(showNode.def)) {
-        //     showNode.def = 0;
-        // }
-
-        // if (showNode.def > 0) {
-        //     showNode.defLab = playColor;
-        //     showNode.def = true;
+        // if (data.friendSkill) {
+        //     showNode.friendSkill = true;
+        //     showNode.friendSkill = cc.v2(true, y);
+        //     y -= d;
         // }
         // else {
-        //     showNode.defLab = stopColor;
-        //     showNode.def = false;
+        //     showNode.friendSkill = false;
+        //     // showNode.mainSkill = cc.v2(true, y);   
         // }
-
-        // if (showNode.skillNum <= showNode.power) {
-            showNode.mainSkillLab = playColor;
-        // }
-        // else {
-        //     showNode.mainSkillLab = stopColor;
-        // }
-
-        let y = 0;
-        let d = 230;
-        if (data.mainSkill) {
-            showNode.mainSkill = true;
-            showNode.mainSkill = cc.v2(true, y);
-            y -= d;
-        }
-        else {
-            showNode.mainSkill = false;
-            // showNode.mainSkill = cc.v2(true, y);   
-        }
-
-        if (data.friendSkill) {
-            showNode.friendSkill = true;
-            showNode.friendSkill = cc.v2(true, y);
-            y -= d;
-        }
-        else {
-            showNode.friendSkill = false;
-            // showNode.mainSkill = cc.v2(true, y);   
-        }
     },
 
     showCardData () {
@@ -1416,6 +1407,7 @@ cc.Class({
             type: "main"
         };
         let endData = this.getEndData(atkData, hjm._hero.buffArr);
+
         let fun = (name)=>{
             if (isNaN(atkData[name])) {
                 showNode[name + "Lab"] = stopColor;
@@ -1444,56 +1436,52 @@ cc.Class({
         }
         fun("atk");
         fun("def");
-        // if (showNode.atk > 0) {
-        //     showNode.atkLab = playColor;
-        //     showNode.atk = true;
+
+        let showSkillStr = "";
+        let addStrToShowSkillStr = function (str) {
+            if (showSkillStr) {
+                showSkillStr += "\n";
+            }
+            showSkillStr += str;
+        }
+        if (data.mainSkillStr) {
+            let str = "技能(" + String(data.skillNum) + ")：" + data.mainSkillStr;
+            addStrToShowSkillStr(str);
+        }
+        if (data.friendSkillStr) {
+            let str = "辅助：" + data.friendSkillStr;
+            addStrToShowSkillStr(str);
+        }
+        showNode.skillStr = showSkillStr;
+
+        // if (showNode.skillNum <= showNode.power) {
+        //     showNode.mainSkillLab = playColor;
         // }
         // else {
-        //     showNode.atkLab = stopColor;
-        //     showNode.atk = false;
+        //     showNode.mainSkillLab = stopColor;
         // }
 
-        // if (isNaN(showNode.def)) {
-        //     showNode.def = 0;
-        // }
-
-        // if (showNode.def > 0) {
-        //     showNode.defLab = playColor;
-        //     showNode.def = true;
+        // let y = 0;
+        // let d = 230;
+        // if (data.mainSkill) {
+        //     showNode.mainSkill = true;
+        //     showNode.mainSkill = cc.v2(true, y);
+        //     y -= d;
         // }
         // else {
-        //     showNode.defLab = stopColor;
-        //     showNode.def = false;
+        //     showNode.mainSkill = false;
+        //     // showNode.mainSkill = cc.v2(true, y);   
         // }
 
-        if (showNode.skillNum <= showNode.power) {
-            showNode.mainSkillLab = playColor;
-        }
-        else {
-            showNode.mainSkillLab = stopColor;
-        }
-
-        let y = 0;
-        let d = 230;
-        if (data.mainSkill) {
-            showNode.mainSkill = true;
-            showNode.mainSkill = cc.v2(true, y);
-            y -= d;
-        }
-        else {
-            showNode.mainSkill = false;
-            // showNode.mainSkill = cc.v2(true, y);   
-        }
-
-        if (data.friendSkill) {
-            showNode.friendSkill = true;
-            showNode.friendSkill = cc.v2(true, y);
-            y -= d;
-        }
-        else {
-            showNode.friendSkill = false;
-            // showNode.mainSkill = cc.v2(true, y);   
-        }
+        // if (data.friendSkill) {
+        //     showNode.friendSkill = true;
+        //     showNode.friendSkill = cc.v2(true, y);
+        //     y -= d;
+        // }
+        // else {
+        //     showNode.friendSkill = false;
+        //     // showNode.mainSkill = cc.v2(true, y);   
+        // }
     },
 
     //获取攻击的牌，并且向上移动，playCardArr 第一个是主攻卡，后面都是辅助卡

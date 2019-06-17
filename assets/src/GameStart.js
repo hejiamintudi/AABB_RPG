@@ -157,6 +157,29 @@ cc.Class({
             })(end)();
     },
 
+    // 进入商店面板
+    comeShop (end) {
+        let cardNameArr = ["aa", "bb", "cc"];
+        let cardArr = []; // 商品展示的卡组
+        for (let i = 0; i < cardNameArr.length; i++) {
+            let name = cardNameArr[i];
+            let card = hjm._shop.add();
+            card.x = 1000;
+            hjm[name] = card.card; // 动态加载图片
+            let data = {};
+            dyl.data("card." + name, data);
+            card.buy.add(data.coin, "deck." + name);
+        }
+        let d = 250; // 两张卡牌之间距离
+        let leftX = (1 - len) * d / 2; // 最左卡牌的横坐标
+        let y = cardArr[0].y; // 卡牌的纵坐标
+        tz.to(cardArr, [cc.v2(d, 0), 0.3], 0.5, cc.v2(leftX, y))(end)();
+    },
+
+    setWinButton (leaveWinName, comeWinName, str) {
+        
+    },
+
     // 进入聊天面板
     // 只需要添加回复ui就好了
     comeTalk (end) {
