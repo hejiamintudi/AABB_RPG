@@ -60,12 +60,24 @@ cc.director.on(cc.Director.EVENT_AFTER_UPDATE, function () {
     var dt = cc.director.getDeltaTime();
     // cc.log(dt, "end");
     for (var i = updateFunArr.length - 1; i >= 0; i--) {
-        if (!updateFunArr[i](dt)) {
-            updateFunArr[i]._dylIsDel = true;
-            updateFunArr[i] = updateFunArr[updateFunArr.length - 1];
-            updateFunArr[i].id = i;
-            updateFunArr.length--;
+        var fun = updateFunArr[i];
+        if (!fun.nowFun(dt)) {
+            if (!fun.nowFun.nextFun) {
+                fun._dylIsDel = true;   
+                updateFunArr[i] = updateFunArr[updateFunArr.length - 1];
+                updateFunArr[i].id = i;
+                updateFunArr.length--; 
+            }
+            else {
+                fun.nowFun = fun.nowFun.nextFun;
+            }
         }
+        // if (!updateFunArr[i](dt)) {
+        //     updateFunArr[i]._dylIsDel = true;
+        //     updateFunArr[i] = updateFunArr[updateFunArr.length - 1];
+        //     updateFunArr[i].id = i;
+        //     updateFunArr.length--;
+        // }
     }
 });
 
@@ -1034,39 +1046,98 @@ window.initDylFun = function (cryptoJS) {
     //     counter();
     // };
 
+    // 参数 空 函数 函数数组：如果函数不是被迫结束，那函数结束时会执行下一个函数
+    // 返回函数 参数 空：停止 函数：替换 函数数组：在后面添加
+    // fun nowFun:当前update运行的函数 nextFun:nowFun完了就要进入的下一个函数 endFun:最后一个fun
     dyl.update = function (arg) {
         var fun = null;
-        if (arg) {
+        if (arg && (typeof arg === "function")) {
             fun = arg;
+            fun.nowFun = fun;
+            fun.endFun = fun;
+
+            fun.id = updateFunArr.length;
+            updateFunArr.push(fun);
+        }
+        else if (arg && (Array.isArray(arg)) && (arg.length > 0)) {
+            var arr = arg;
+            fun = arr[0];
+            fun.nowFun = fun;
+            fun.endFun = arr[arr.length - 1];
+            for (var i = 0; i < arr.length - 1; i++) {
+                arr[i].nextFun = arr[i + 1];
+            }
+
             fun.id = updateFunArr.length;
             updateFunArr.push(fun);
         }
         var delFun = function delFun(newFun) {
-            // cc.log(fun._dylIsDel);
-            if (fun && (!fun._dylIsDel) && newFun) {
+            if (fun && fun._dylIsDel) {
+                fun = null;
+            }
+
+            // 参数是数组
+            if (Array.isArray(newFun)) {
+                var arr = newFun;
+                var id = 0;
+                if (!fun) {
+                    id++;
+                    fun = arr[0];
+                    fun.nowFun = fun;
+                    fun.endFun = fun;
+                    fun.id = updateFunArr.length;
+                    updateFunArr.push(fun);
+                }
+                var endFun = fun.endFun;
+                for (var i = id; i < arr.length; i++) {
+                    endFun.nextFun = arr[i];
+                    endFun = arr[i];
+                }
+                fun.endFun = arr[arr.length - 1];
+                return;
+            }
+
+            // 参数为空
+            if (!newFun) {
+                if (fun) {
+                    var id = fun.id;
+                    updateFunArr[id] = updateFunArr[updateFunArr.length - 1];
+                    updateFunArr[id].id = id;
+                    updateFunArr.length--;
+                    fun = null;
+                }
+                return;
+            }
+
+            // 参数为函数
+            if (fun) {
                 var id = fun.id;
                 updateFunArr[id] = newFun;
                 fun = newFun;
                 fun.id = id;
+                fun.endFun = fun;
+                fun.nowFun = fun;
                 return;
             }
-            else if (newFun) {
+            else {
                 fun = newFun;
                 fun.id = updateFunArr.length;
                 updateFunArr.push(fun);
+                fun.endFun = fun;
+                fun.nowFun = fun;
                 return;
             }
-            else if (!fun || fun._dylIsDel) {
-                // 已经被删除了
-                fun = null;
-                return;
-            }
-            // fun._dylIsDel = true;
-            var id = fun.id;
-            updateFunArr[id] = updateFunArr[updateFunArr.length - 1];
-            updateFunArr[id].id = id;
-            updateFunArr.length--;
-            fun = null;
+            // else if (!fun || fun._dylIsDel) {
+            //     // 已经被删除了
+            //     fun = null;
+            //     return;
+            // }
+            // // fun._dylIsDel = true;
+            // var id = fun.id;
+            // updateFunArr[id] = updateFunArr[updateFunArr.length - 1];
+            // updateFunArr[id].id = id;
+            // updateFunArr.length--;
+            // fun = null;
         };
         return delFun;
     };
