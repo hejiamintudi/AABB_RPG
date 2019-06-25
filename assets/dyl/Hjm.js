@@ -481,6 +481,41 @@ window.initHjmFun = function () {
                     sprite.spriteFrame = spr;
                 });
             } else if (Array.isArray(value)) {
+
+                // 节点 数组赋值法
+                if (id[0] === "_" && tab[id]) {
+                    if (Array.isArray(value)) {
+                        var tmpNode = tab[id];
+                        for (var i = 0; i < value.length; i++) {
+                            var tmpValue = value[i];
+                            if (typeof tmpValue === "number") { // 透明度
+                                tmpNode.opacity = tmpValue;
+                            }
+                            else if (typeof tmpValue === "boolean") {
+                                tmpNode.active = tmpValue;
+                            }
+                            else if (Array.isArray(tmpValue)) {
+                                if (tmpValue.length > 1) { // [n1, n2] 缩放
+                                    tmpNode.scale = cc.v2(tmpValue[0], tmpValue[1]);
+                                }
+                                else { // [num] 旋转角度
+                                    tmpNode.rotation = tmpValue[0];
+                                }
+                            }
+                            else if (cc.js.getClassName(tmpValue) === "cc.Vec2") { // 位置
+                                tmpNode.position = tmpValue;
+                            }
+                            else if (cc.js.getClassName(tmpValue) === "cc.Color") {
+                                tmpNode.color = tmpValue;
+                            }
+                            else {
+                                cc.error("这个参数类型没有考虑过", tmpValue);
+                            }
+                        }
+                    }
+                    return;
+                }
+
                 if (!arrTab[id]) {
                    return cc.warn("hjm 的arrTab没有定义过这个属性", id);
                 }
