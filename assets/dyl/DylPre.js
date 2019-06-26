@@ -1289,45 +1289,46 @@ window.initDylFun = function (cryptoJS) {
 
         return buffer;
     };
+// 字符串（str + 1变量）： split 切割 (str, str1)
+// 字符串 （str + 2 num）： slice (str, start, end)
+// 字符串（str + 变量 + 字符串变量））： replace 替换  （str, regexp/substr,replacement）
+// 数组（arr + 2 num）: slice (str, start, end)
+// 对象 普通获取
+// 其他，直接输出原对象
 
-    dyl.get = function (data) {
-        if (data === undefined) {
-            return undefined;
+    dyl.get = function (obj, ...arr) {
+        if (typeof obj === "string") {
+            if (arr.length === 0) {
+                return cc.error("后面没有参数，不知道对字符串怎么处理");
+            }
+            if (arr.length === 1) {
+                return obj.split(arr[0]);
+            }
+            else if (typeof arr[1] === "number") {
+                return obj.slice(...arr);
+            }
+            else {
+                return obj.replace(...arr);
+            }
         }
-        for (var _len3 = arguments.length, arr = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-            arr[_key3 - 1] = arguments[_key3];
+        else if (Array.isArray(obj)) {
+            return obj.slice(...arr);
         }
-
-        if (data === null && arr.length > 0) {
-            return undefined;
+        else if (obj && (typeof obj === "object")) {
+            return obj[arr[0]];
         }
-
-        if (arr.length === 0) {
-            return data;
-        }
-        var name = arr[0],
-            newArr = arr.slice(1);
-
-        return this.get.apply(this, [data[name]].concat(_toConsumableArray3(newArr)));
+        return obj;
     };
 
-    dyl.set = function () {
-        var _dyl;
-
-        for (var _len4 = arguments.length, arr = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-            arr[_key4] = arguments[_key4];
+// 数组：splice 替换  （arr, startId, howMany, ...otherArr）
+// 对象：直接设置，没有特别地方 (obj, index, value）
+    dyl.set = function (obj, ...arr) {
+        if (Array.isArray(obj)) {
+            obj.splice(...arr);
         }
-
-        if (arr.length < 2) {
-            return cc.error("参数太少了，至少需要两个");
+        else if (obj && typeof obj === "object") {
+            obj[arr[0]] = arr[1];
         }
-        var value = arr.pop();
-        var lastVar = arr.pop();
-        var data = (_dyl = dyl).get.apply(_dyl, arr);
-        if (!data) {
-            return;
-        }
-        data[lastVar] = value;
     };
 
     // dyl.set = function (...arr) {
