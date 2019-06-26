@@ -39,8 +39,10 @@ cc.Class({
     },
 
     choose (card) {
-        hjm._choose.active = true;
-        hjm._choose.setPosition(cc.v2(card).add(card.parent));
+        // hjm._choose.active = true;
+        // hjm._choose.setPosition(cc.v2(card).add(card.parent));
+        hjm._choose = [true, cc.v2(card).add(card.parent)];
+
         let data = card.npcData;
         let dataId = data.id;
 
@@ -225,27 +227,6 @@ cc.Class({
             end();
             return;
         }
-        // let actFun = (i, endFun)=>{
-        //     hand[i].active = true;
-        //     let data = hand[i].npcData;
-        //     let x = (dir > 0) ? (400 * (i - 1)) : -1500;
-        //     if (dir > 0) {
-        //         hand[i].x = 1000 + 400 * i;
-        //     }
-        //     let t = Math.abs(hand[i].x - x) / speed;
-        //     let act = tz(hand[i], 0.1 * i).moveTo(t, x, hand[i].y);
-        //     if (dir < 0) {
-        //         act(()=>{
-        //             hand[i].x = 1500;
-        //             hand[i].active = false;
-        //         })
-        //     }
-        //     act(endFun)();
-        // }
-        // for (let i = 0; i < hand.length - 1; i++) {
-        //     actFun(i, ()=>null);
-        // }
-        // actFun(hand.length - 1, end);
 
 ///////////////
         let x = -1000 + (1 - hand.length) * 200

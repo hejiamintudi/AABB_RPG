@@ -223,6 +223,78 @@ window.tz = function (node, ...argArr) {
 	}
 	let createSampleAct = function (data) {
 		let act = null;
+
+		// 数组代表直接对节点或者节点数组赋值
+		// 直接赋值的数据类型 bool：active cc.v2:position [num]:rotate [num1, num2]:scale num:opacity color
+		// string: 节点这个属性是函数，那就运行这个函数，如果string后是数组，那这个数组的内容就是函数的参数列表 否则函数参数为空
+		if (Array.isArray(data)) { // 也是转换函数，丢给函数处理
+			let arr = data;
+			data = function () {
+				let nodeArr = [];
+				let setVal = function (name, val) {
+					for (let i = nodeArr.length - 1; i >= 0; i--) {
+						nodeArr[i][name] = val;
+					}
+				}
+				for (let i = 0; i < arr.length; i++) {
+					let val = arr[i];
+					let className = cc.js.getClassName(val);
+					if (Array.isArray(val)) {
+						if (val.length < 1) {
+							return cc.error("这里的数组不能为空");
+						}
+						if (typeof val[0] === "number") {
+							if (val.length === 1) {
+								setVal("rotate", val);
+							}
+							else {
+								setVal("scale", cc.v2(val[0], val[1]));
+							}
+						}
+						else {
+							nodeArr = val;
+						}
+					}
+					else if (className === "cc.Node") {
+						nodeArr = [val];
+					}
+					else if (typeof val === "boolean") {
+						setVal("active", val);
+					}
+					else if (className === "cc.Color") {
+						setVal("color", val);
+					}
+					else if (className === "cc.Vec2") {
+						setVal("position", val);
+					}
+					else if (typeof val === "number") {
+						setVal("opacity", val);
+					}
+					else if (typeof val === "string") {
+						if (typeof nodeArr[0][val] === "function") {
+							if (Array.isArray(arr[i+1])) {
+								i++;
+								for (let j = 0; j < nodeArr.length; j++) {
+									nodeArr[j][val](...arr[i]);
+								}
+							}
+							else {
+								for (let j = 0; j < nodeArr.length; j++) {
+									nodeArr[j][val]();
+								}	
+							}
+						}
+						else {
+							i++;
+							setVal(val, arr[i]);
+						}
+					}
+					else {
+						return cc.error("完全不知道怎么处理");
+					}
+				}
+			}
+		}
 		if (typeof data === "string") { //转换为函数，丢给函数处理
 			let str = data;
 			if (debugStr === "") {
@@ -502,7 +574,7 @@ window.tz = function (node, ...argArr) {
         					funArr.push(arr[i]);
         				}
         				else if (Array.isArray(arr[i])) {
-        					if (arr[i].length === 1) { // 透明度
+        					if (arr[i].length === 1) { // 
         						tab.rotate = arr[i][0];
         					}
         					else { //缩放
