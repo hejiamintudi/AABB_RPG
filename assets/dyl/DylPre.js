@@ -1456,6 +1456,14 @@ window.initDylFun = function (cryptoJS) {
         // let customTab = {}; // 自定义变量
         for (i = 0; i < arr.length; i++) {
             var value = arr[i];
+            var className = null;
+            if (value && (typeof value === "object") && (!value.getChildren) && (value.x !== undefined) && (value.y !== undefined)) {
+                className = "cc.Vec2";
+            }
+            else {
+                className = cc.js.getClassName(value);
+            }
+
             if (typeof value === "number") { // 透明度
                 tab.opacity = value;
             }
@@ -1470,10 +1478,10 @@ window.initDylFun = function (cryptoJS) {
                     tab.rotation = value[0];
                 }
             }
-            else if (cc.js.getClassName(value) === "cc.Vec2") { // 位置
+            else if (className === "cc.Vec2") { // 位置
                 tab.position = value;
             }
-            else if (cc.js.getClassName(value) === "cc.Color") {
+            else if (className === "cc.Color") {
                 tab.color = value;
             }
             else if (typeof value === "function") {
@@ -1498,6 +1506,13 @@ window.initDylFun = function (cryptoJS) {
                 var value = tab.funArr[j](i, nodeArr[i]);
                 // cc.log("fun", value);
                 // cc.log(value, typeof value);
+                var className = null;
+                if (value && (typeof value === "object") && (!value.getChildren) && (value.x !== undefined) && (value.y !== undefined)) {
+                    className = "cc.Vec2";
+                }
+                else {
+                    className = cc.js.getClassName(value);
+                }
 
                 if (typeof value === "number") { // 透明度
                     if (tab.opacity === undefined && i > 0) {
@@ -1545,13 +1560,13 @@ window.initDylFun = function (cryptoJS) {
                     // isContinue = true;
                     // continue;
                 }
-                else if (cc.js.getClassName(value) === "cc.Vec2") { // 位置
+                else if (className === "cc.Vec2") { // 位置
                     if (tab.position === undefined && i > 0) {
                         return cc.error("之前并没有定义过cc.Vec2，函数返回不能是cc.Vec2, 除非位置是从0开始");
                     }
                     tab.position = value;
                 }
-                else if (cc.js.getClassName(value) === "cc.Color") {
+                else if (className === "cc.Color") {
                     if (tab.color === undefined && i > 0) {
                         return cc.error("之前并没有定义过cc.Color，函数返回不能是cc.Color, 除非位置是从0开始");
                     }
@@ -1579,7 +1594,14 @@ window.initDylFun = function (cryptoJS) {
             // }
             for (var id in tab) {
                 // cc.log(id, tab[id])
-                node[id] = tab[id];
+                if (id === "position") {
+                    var x = (tab[id].x === true) ? node.x : tab[id].x;
+                    var y = (tab[id].y === true) ? node.y : tab[id].y;
+                    node.setPosition(x, y);
+                }
+                else {
+                    node[id] = tab[id];
+                }
             }
         }
     };

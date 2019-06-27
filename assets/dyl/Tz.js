@@ -236,9 +236,22 @@ window.tz = function (node, ...argArr) {
 						nodeArr[i][name] = val;
 					}
 				}
+				let setPosFun = function (val) {
+					for (let i = nodeArr.length - 1; i >= 0; i--) {
+						let x = (val.x === true) ? nodeArr[i].x : val.x;
+						let y = (val.y === true) ? nodeArr[i].y : val.y;
+						nodeArr[i].setPosition(x, y);
+					}
+				}
 				for (let i = 0; i < arr.length; i++) {
 					let val = arr[i];
-					let className = cc.js.getClassName(val);
+					let className = null;
+					if (val && (typeof val === "object") && (!val.getChildren) && (val.x !== undefined) && (val.y !== undefined)) {
+						className = "cc.Vec2"
+					}
+					else {
+						className = cc.js.getClassName(val);
+					}
 					if (Array.isArray(val)) {
 						if (val.length < 1) {
 							return cc.error("这里的数组不能为空");
@@ -265,7 +278,8 @@ window.tz = function (node, ...argArr) {
 						setVal("color", val);
 					}
 					else if (className === "cc.Vec2") {
-						setVal("position", val);
+						// setVal("position", val);
+						setPosFun(val);
 					}
 					else if (typeof val === "number") {
 						setVal("opacity", val);
