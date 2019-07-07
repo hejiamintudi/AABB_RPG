@@ -185,7 +185,7 @@ cc.Class({
         delPool.push(node);
         // cc.kk = node;
         node.del = function () {
-            cc.log("del");
+            // cc.log("del");
             this.active = false;
             delPool.push(this);
             let id = this.__poolId;

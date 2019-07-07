@@ -1292,7 +1292,9 @@ window.initDylFun = function (cryptoJS) {
 // 字符串（str + 1变量）： split 切割 (str, str1)
 // 字符串 （str + 2 num）： slice (str, start, end)
 // 字符串（str + 变量 + 字符串变量））： replace 替换  （str, regexp/substr,replacement）
-// 数组（arr + 2 num）: slice (str, start, end)
+// 数组（arr +  2 num）: slice (str, start, end)
+// 数组（arr + value）：indexOf
+// 数组（arr + str + value）： 获得arr里面是对象，并且str属性的值等于value的 id
 // 对象 普通获取
 // 其他，直接输出原对象
 
@@ -1312,7 +1314,20 @@ window.initDylFun = function (cryptoJS) {
             }
         }
         else if (Array.isArray(obj)) {
-            return obj.slice(...arr);
+            if (arr.length === 1) {
+                return obj.indexOf(arr[0]);
+            }
+            else if (typeof arr[0] === "string") {
+                for (var i = 0; i < obj.length; i++) {
+                    if (obj[i] && (typeof obj[i] === "object") && (obj[i][arr[0]] === arr[1])) {
+                        return i;
+                    }
+                }
+                return -1;
+            }
+            else {
+                return obj.slice(...arr);
+            }
         }
         else if (obj && (typeof obj === "object")) {
             return obj[arr[0]];
@@ -1646,11 +1661,14 @@ window.initDylFun = function (cryptoJS) {
     // };
 };
 
-if (window.initHjmDataFun && window.initHjmFun && window.iscryptoJS) {
+if (window.initHjmDataFun && window.initHjmFun && window.isCryptoJS) {
     cc.log("init dylPre");
     window.initDylFun(window.isCryptoJS);
     window.initHjmFun();
+    var ___ttt = hjm;
+    hjm = _hjm;
     window.initHjmDataFun();
+    hjm = ___ttt;
 }
 
 // });

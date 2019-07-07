@@ -37,7 +37,10 @@ d[k>>>24]^e[n>>>16&255]^j[g>>>8&255]^l[h&255]^c[p++],n=d[n>>>24]^e[g>>>16&255]^j
 if (window.initHjmDataFun && window.initHjmFun && window.initDylFun) {
 	window.initDylFun(CryptoJS);
 	window.initHjmFun();
+    var ___ttt = hjm;
+    hjm = _hjm;
     window.initHjmDataFun();
+    hjm = ___ttt;
 }
 else {
 	window.isCryptoJS = CryptoJS;

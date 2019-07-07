@@ -96,7 +96,6 @@ window.hjm = null;
             _hjm[id] = value;
         }
     });
-
     cc.director.on(cc.Director.EVENT_BEFORE_SCENE_LAUNCH, function () {
         hjm = _hjm1;
         var tmp = Math.floor(Math.random() * 9987617);
@@ -552,7 +551,10 @@ if (window.initHjmDataFun && window.isCryptoJS && window.initDylFun) {
     cc.log("init hjm");
     window.initDylFun(window.isCryptoJS);
     window.initHjmFun();
+    var ___ttt = hjm;
+    hjm = _hjm;
     window.initHjmDataFun();
+    hjm = ___ttt;
 }
 
 // },
