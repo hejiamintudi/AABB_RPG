@@ -10,9 +10,77 @@ cc.Class({
         // this.node.button = [hjm._button];
         // let arr = ["initCard", "pushCard", "resetPos", "autoChoose"];
         // dyl.process(this, arr);
+        this.initAi();
         this.initVar();
         // this.next();
         this.changeEvent(null, "main");
+        dyl.button(this, hjm._buttonLab);
+    },
+
+    initAi () {
+        dyl.setRand(1);
+        let tabToNameArr = function (data) {
+            var nameArr = [];
+            for (var i in data) {
+                nameArr.push(i);
+            }
+            return nameArr;
+        }
+
+        let dylDataIdToArr = function (name) {
+            var data = dyl._data[name];
+            var arr = [];
+            for (var i in data) {
+                if (i !== "_data") {
+                    arr.push(i);
+                }
+            }
+            return arr;
+        }
+
+        // 在allArr 里面随机获取num个元素的新数组，元素排序不变
+        let getNewArr = function (num, allArr) {
+            var newArr = [];
+            for (var i = 0; i < allArr.length; i++) {
+                // r 剩余要获取的数量 / 剩余总数 = 当前元素被提取的概率
+                var r = (num - newArr.length) / (allArr.length - i);
+                if (dyl.rand() <= r) {
+                    newArr.push(allArr[i]);
+                }
+            }
+            return newArr;
+        }
+
+        // 参数形式 [name, num, name, num ....];
+        let getEventArr = function (arr) {
+            var data = {}; // data[name] = num;
+            var nameArr = [];
+            var len = 0; // 总数量
+            var eventArr = [];
+            for (var i = 0; i < arr.length; i += 2) {
+                if (arr[i + 1] < 1) {
+                    continue;
+                }
+                data[arr[i]] = arr[i+1];
+                nameArr.push(arr[i]);
+                len += arr[i + 1]
+            }
+            for (var i = 0; i < len; i++) {
+                var id = dyl.rand(nameArr.length);
+                var name = nameArr[id];
+                eventArr.push(name);
+                if ((--data[name]) === 0) {
+                    nameArr[id] = nameArr[nameArr.length - 1];
+                    nameArr.length--;
+                }
+            }
+            return eventArr;
+        }
+
+        ai.newCardNameArr = getNewArr(ai._maxCardNum, ai._allCardNameArr); // 新卡将会按顺序从这个数组里面开始获取，暂时直接用_maxCardNum，以后是直接根据动态生成这个数量
+        ai.newEnNameArr = getNewArr(ai._maxEnNum,  ai._allEnNameArr);
+        ai.newTalkNameArr = getNewArr(ai._maxTalkNum, ai._allTalkNameArr);
+        ai.eventArr = getEventArr(["talk", 5]);
     },
 
     initVar () {
@@ -33,7 +101,7 @@ cc.Class({
     next () { // 下一个状态
         let e1 = this._nowEvent;
         let e2 = this._nowEvent = ai.eventArr[++hjm.newEventId];
-        // cc.log("next", e1, "...", e2, "||||");
+        cc.log("next", e1, "...", e2, "||||");
         this.changeEvent(e1, e2);
     },
 
@@ -67,12 +135,13 @@ cc.Class({
 // 奖励 str num
     talkCome (end) {
         let dataArr = ai.newTalkNameArr[++hjm.newTalkId];
+        let pool = hjm._talk_pool;
         let lab = hjm._talk_lab;
         lab.str = dataArr[0];
-        tz([lab, true, cc.v2(0, 1000)])
-            .to(lab, 0.5, cc.v2(0, 290))();
+        // cc.log("talkCome..........");
+        tz([[lab, pool], true, cc.v2(0, 1000)])
+            .to(lab, this._moveTime, cc.v2(0, 290))();
 
-        let pool = hjm._talk_pool;
 
         // 
         let replyStrArr = []; // 回复的显示的字符串
@@ -91,8 +160,9 @@ cc.Class({
             for (let j = 0; j < rewardArr.length; j += 2) {
                 data[rewardArr[j]] = Number(rewardArr[j + 1]);
             }
-            // replyDataArr.push(data);            
-            pool[i].data = data;
+            // replyDataArr.push(data);         
+            let node = pool.add();   
+            node.data = data;
         }
 
 
@@ -155,6 +225,28 @@ cc.Class({
     },
 
     nextButton () {
+        cc.log("nextButton");
+        this.next();
+    },
+
+    newGameMainButton () {
+        cc.log("newGameMainButton");
+        let seedNum = Math.random() * 10000 + 23 >> 0;
+        cc.log("随机种子是", seedNum);
+        hjm.seedNum = seedNum;
+        dyl.setRand(seedNum);
+        hjm.newCardId = -1;
+        hjm.newEnId = -1;
+        hjm.newTalkId = -1;
+        hjm.newEventId = -1;
+        hjm.deck = ["jian", "dun"];
+        this.next();
+    },
+
+    continueGameMainButton () {
+        cc.log("continueGameMainButton");
+        cc.log("随机种子是", hjm.seedNum);
+        dyl.setRand(hjm.seedNum);
         this.next();
     },
 

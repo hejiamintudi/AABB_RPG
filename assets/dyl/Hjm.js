@@ -16,6 +16,74 @@ window.ai = {};
 window._hjm = null;
 window.hjm = null;
 (function () {
+    window._hjm1 = null; // 变量提前，防止出意外
+
+///////////////.... 
+    var _dylDefaultTab = {}; // name: value
+    var _dylDefaultGroup = { _dylAll: [[], [], [], []] }; // groupName: [直接赋值名字数组，对象名字数组，数组名字数组，假对象名字数组]
+
+
+    var _dylCopyArrFun = function (arr) {
+        var newArr = [];
+        for (var i = 0; i < arr.length; i++) {
+            newArr.push(arr[i]);
+        }
+        return newArr;
+    }
+
+    var _dylCopyTabFun = function (tab) {
+        var newTab = {};
+        for (var i in tab) {
+            newTab[i] = tab[i];
+        }
+        return newTab;
+    }
+
+    var _dylPushDefaultToGroupFun = function (groupName, name, arrId) {
+        if (!_dylDefaultGroup[groupName]) {
+            _dylDefaultGroup[groupName] = [[], [], [], []];
+        }
+        _dylDefaultGroup[groupName][arrId].push(name);
+    }
+
+    var _dylResetDefaultFun = function (arr) {
+        var arr0 = arr[0];
+        var arr1 = arr[1];
+        var arr2 = arr[2];
+        var arr3 = arr[3];
+
+        // 直接赋值
+        for (var i = arr0.length - 1; i >= 0; i--) {
+            var name = arr0[i];
+            _hjm[name] = _dylDefaultTab[name];
+        }
+
+        // 直接赋值对象， 复制对象
+        for (var i = arr1.length - 1; i >= 0; i--) {
+            var name = arr1[i];
+            _hjm[name] = _dylDefaultTab[name];
+            _dylDefaultTab[name] = _dylCopyTabFun(_dylDefaultTab[name]);
+        }
+
+        // 直接赋值数组， 复制数组
+        for (var i = arr2.length - 1; i >= 0; i--) {
+            var name = arr2[i]
+            _hjm[name] = _dylDefaultTab[name];
+            _dylDefaultTab[name] = _dylCopyArrFun(_dylDefaultTab[name]);    
+        }
+
+        // 这是假对象， 不需要复制对象的
+        for (var i = arr3.length - 1; i >= 0; i--) {
+            var name = arr3[i];
+            var tmpTab = _dylDefaultTab[name];
+            for (var id in tmpTab) {
+                _hjm[name][id] = tmpTab[id];
+            }
+        }
+    }
+
+/////////////..............
+
     var tab = {};
     var hasTab = {}; // 只是保存
     var pngRes = {};
@@ -83,7 +151,18 @@ window.hjm = null;
         pngRes = {};
     };
 
-    window._hjm1 = new Proxy({}, {
+    var _hjm1Fun = function (arg1, arg2) {
+        if (arg2 !== undefined) {
+            return cc.error("这里我本来只是用来重置hjm的默认值而已，不是设置, 不应该有第二个参数的");
+        }
+        if (arg1 === undefined) {
+            return _dylResetDefaultFun(_dylDefaultGroup._dylAll);
+        }
+        else {
+            return _dylResetDefaultFun(_dylDefaultGroup[arg1]);
+        }
+    };
+    window._hjm1 = new Proxy(_hjm1Fun, {
         get: function get(target, id) {
             hjm = _hjm;
             hjmInit();
@@ -135,7 +214,17 @@ window.hjm = null;
         //     });
         // };
 
-        var createFun = function createFun(name, defaultValue) {
+        var createFun = function createFun(name, defaultValue, groupName) {
+            if (defaultValue === undefined) {
+                if (name === undefined) {
+                    return _dylResetDefaultFun(_dylDefaultGroup._dylAll);
+                }
+                else {
+                    return _dylResetDefaultFun(_dylDefaultGroup[name]);
+                }
+                return;
+            }
+
             hasTab[name] = true;
             if (Array.isArray(defaultValue)) {
                 // 数组包对象，代表是可变对象
@@ -146,6 +235,16 @@ window.hjm = null;
                         data = tmp0;
                     }
                     objTab[name] = data;
+
+
+                    _dylDefaultTab[name] = _dylCopyTabFun(data);
+                    if (groupName === undefined) {
+                        _dylPushDefaultToGroupFun("_dylAll", name, 1);
+                    }
+                    else {
+                        _dylPushDefaultToGroupFun("_dylAll", name, 1);    
+                        _dylPushDefaultToGroupFun(groupName, name, 1);
+                    }
                 }
                 else { // 这个是纯数组
                     var data = JSON.parse(dyl.read(name));
@@ -153,6 +252,15 @@ window.hjm = null;
                         data = defaultValue;
                     }
                     arrTab[name] = data;    
+
+                    _dylDefaultTab[name] = _dylCopyArrFun(data);
+                    if (groupName === undefined) {
+                        _dylPushDefaultToGroupFun("_dylAll", name, 2);
+                    }
+                    else {
+                        _dylPushDefaultToGroupFun("_dylAll", name, 2);    
+                        _dylPushDefaultToGroupFun(groupName, name, 2);
+                    }
                 }
                 return;
                 // var data = JSON.parse(dyl.read(name));
@@ -199,7 +307,8 @@ window.hjm = null;
                     }
                 }
                 else {
-                    data = defaultValue;
+                    data = _dylCopyTabFun(defaultValue);
+                    // data = defaultValue;
                     for (var objIndex in defaultValue) {
                         if (typeof defaultValue[objIndex] === "boolean") {
                             dyl.save(objStr + objIndex, data[objIndex] ? 1 : 0);
@@ -252,6 +361,15 @@ window.hjm = null;
                     };
                 };
                 fun();
+
+                _dylDefaultTab[name] = defaultValue;
+                if (groupName === undefined) {
+                    _dylPushDefaultToGroupFun("_dylAll", name, 3);
+                }
+                else {
+                    _dylPushDefaultToGroupFun("_dylAll", name, 3);    
+                    _dylPushDefaultToGroupFun(groupName, name, 3);
+                }
                 return;
             } else if (typeof defaultValue === "boolean") {
                 var str = dyl.read(name);
@@ -290,6 +408,15 @@ window.hjm = null;
                     notify: function (newValue, oldValue, labArr) {},
                     funArr: [] // 这是notify的数组形式，只给个人库的代码使用
                 };
+
+                _dylDefaultTab[name] = defaultValue;
+                if (groupName === undefined) {
+                    _dylPushDefaultToGroupFun("_dylAll", name, 0);
+                }
+                else {
+                    _dylPushDefaultToGroupFun("_dylAll", name, 0);    
+                    _dylPushDefaultToGroupFun(groupName, name, 0);
+                }
                 return;
             } else if (typeof defaultValue === "string") {
                 var str = dyl.read(name);
@@ -323,6 +450,15 @@ window.hjm = null;
                     notify: function (newValue, oldValue, labArr) {},
                     funArr: [] // 这是notify的数组形式，只给个人库的代码使用
                 };
+
+                _dylDefaultTab[name] = defaultValue;
+                if (groupName === undefined) {
+                    _dylPushDefaultToGroupFun("_dylAll", name, 0);
+                }
+                else {
+                    _dylPushDefaultToGroupFun("_dylAll", name, 0);    
+                    _dylPushDefaultToGroupFun(groupName, name, 0);
+                }
                 return;
             }
 
@@ -398,6 +534,15 @@ window.hjm = null;
                 funArr: []
             };
             set(num);
+
+            _dylDefaultTab[name] = defaultValue;
+            if (groupName === undefined) {
+                _dylPushDefaultToGroupFun("_dylAll", name, 0);
+            }
+            else {
+                _dylPushDefaultToGroupFun("_dylAll", name, 0);    
+                _dylPushDefaultToGroupFun(groupName, name, 0);
+            }
         };
 
         _hjm = new Proxy(createFun, {
