@@ -173,6 +173,7 @@ window.hjm = null;
             hjm = _hjm;
             hjmInit();
             _hjm[id] = value;
+            return true;
         }
     });
     cc.director.on(cc.Director.EVENT_BEFORE_SCENE_LAUNCH, function () {
@@ -574,11 +575,11 @@ window.hjm = null;
                 if (type === "number" || type === "string" || type === "boolean") {
                     if (!hasTab[id]) {
                         cc.warn("hjm 没有", id, "这个属性");
-                        return;
+                        return true;
                     }
                     if (id[0] === "_") {
                         cc.warn("hjm 这是保存节点的", id);
-                        return;
+                        return true;
                     }
                     // tab[id].num = value;
                     // dyl.save(id, value);
@@ -593,7 +594,7 @@ window.hjm = null;
                     else {
                         cc.warn("hjm 这个属性不存在或不能设置函数", id);
                     }
-                    return;
+                    return true;
                 } else if (typeof value.getChildren === "function"){
                     var node = value;
                     // cc.log(type, id, node);
@@ -658,7 +659,7 @@ window.hjm = null;
                                 }
                             }
                         }
-                        return;
+                        return true;
                     }
 
                     if (!arrTab[id]) {

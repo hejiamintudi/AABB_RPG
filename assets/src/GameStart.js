@@ -77,6 +77,8 @@ cc.Class({
             return eventArr;
         }
 
+        ai._allEnNameArr = dylDataIdToArr("en");
+        ai._allTalkNameArr = tabToNameArr(dylTalkData);
         ai.newCardNameArr = getNewArr(ai._maxCardNum, ai._allCardNameArr); // 新卡将会按顺序从这个数组里面开始获取，暂时直接用_maxCardNum，以后是直接根据动态生成这个数量
         ai.newEnNameArr = getNewArr(ai._maxEnNum,  ai._allEnNameArr);
         ai.newTalkNameArr = getNewArr(ai._maxTalkNum, ai._allTalkNameArr);
@@ -93,6 +95,7 @@ cc.Class({
             arr.push(e1 + "Leave");
         }
         if (e2) {
+            this.node.touch = e2;
             arr.push(e2 + "Come");
         }
         dyl.process(this, arr);
@@ -101,7 +104,7 @@ cc.Class({
     next () { // 下一个状态
         let e1 = this._nowEvent;
         let e2 = this._nowEvent = ai.eventArr[++hjm.newEventId];
-        cc.log("next", e1, "...", e2, "||||");
+        // cc.log("next", e1, "...", e2, "||||");
         this.changeEvent(e1, e2);
     },
 
@@ -134,12 +137,13 @@ cc.Class({
 // data = arr [0: lab显示的字符串， ...(回复，回复后的显示和奖励)]
 // 奖励 str num
     talkCome (end) {
-        let dataArr = ai.newTalkNameArr[++hjm.newTalkId];
+        let name = ai.newTalkNameArr[++hjm.newTalkId];
+        let dataArr = dylTalkData[name];
         let pool = hjm._talk_pool;
         let lab = hjm._talk_lab;
         lab.str = dataArr[0];
         // cc.log("talkCome..........");
-        tz([[lab, pool], true, cc.v2(0, 1000)])
+        tz([lab, true, cc.v2(0, 1000)], [pool, true])
             .to(lab, this._moveTime, cc.v2(0, 290))();
 
 
@@ -156,13 +160,14 @@ cc.Class({
 
             let data = {}; // replay: 点击后的回复显示， 其他是： 奖励名：数量
             let  [replay, ...rewardArr] = dyl.get(dataArr[i + 1], " ");
+            // cc.log("replay", dataArr[i], replay, rewardArr);
             data.replay = replay;
             for (let j = 0; j < rewardArr.length; j += 2) {
                 data[rewardArr[j]] = Number(rewardArr[j + 1]);
             }
             // replyDataArr.push(data);         
-            let node = pool.add();   
-            node.data = data;
+            // let node = pool.add();   
+            lab.data = data;
         }
 
 
@@ -178,17 +183,19 @@ cc.Class({
     talkLeave (end) {
         hjm._buttonLab.nextButton = false;
         let pool = [...hjm._talk_pool.pool];
-        tz()._to(hjm._talk_lab, 0.5, cc.v2(0, 1000))
-            ._by(pool, [0.2], 0.3, cc.v2(-1000, 0))
+        tz()._to(hjm._talk_lab, this._moveTime, cc.v2(0, 1500))
+            ._by(pool, [this._delayTime], this._moveTime, cc.v2(-1500, 0))
             ([pool, "del"])
             ([hjm._talk_lab, false])(end)();
     },
 
-    talkOut (p) {
+    talkEnd (p) {
+        cc.log("talk end");
         let node = p.in(...hjm._talk_pool.pool);
         if (!node) {
             return;
         }
+
         let data = node.data; // replay: 点击后的回复显示， 其他是： 奖励名：数量
 
         if (data.replay === "") {
@@ -198,7 +205,7 @@ cc.Class({
         // 赋值 数据处理
         let newCard = null;
         hjm._talk_lab.str = data.replay;
-        hjm._buttonLab.nextButton = true;
+        // hjm._buttonLab.nextButton = true;
         let actNodeArr = []; // 这是奖励节点数组
 
         if (data.coin) {
@@ -208,20 +215,146 @@ cc.Class({
         }
         if (data.card) {
             let newCardName = ai.newCardNameArr[++hjm.newCardId];
+            // cc.log("card", newCardName);
+            hjm._talk_cardLab.active = true;
             hjm[newCardName] = hjm._talk_cardLab.card; // 加载图片
             hjm.deck.push(newCardName);
             actNodeArr.push(hjm._talk_cardLab);
+            this.node.touch = ["talk1", hjm._talk_cardLab, newCardName];
         }
 
-        actNodeArr.push(hjm._buttonLab.nextButton);
+        let y0 = -368; // 下边界的 y 坐标
+        let y1 = 46; // 上边界的 y 坐标
+        let h = 120; // 奖励节点的 高
+        let n = actNodeArr.length; // 奖励节点的数量
+
+        // actNodeArr.push(hjm._buttonLab.nextButton);
         // 动画效果: 回复离开， 然后奖励节点缩放从小到大，这个要反弹, 位置
-        let act = tz();
-        act.by([...hjm._talk_pool], [0.2], 0.3, cc.v2(-1000, 0))
-            ([actNodeArr, true, [0, 0]])
-            .to(actNodeArr, [cc.v2(0, -100)], 0, cc.v2(0, 0))
-            .to(actNodeArr, [0.2], 0.3, [1, 1], cc.easeBackOut())();
+
+        let act = tz([hjm._buttonLab.nextButton, true, [0, 0]]);
+        let pool = [...hjm._talk_pool.pool];
+        act([actNodeArr, true, [0, 0]])
+            .by(pool, [this._delayTime], this._moveTime, cc.v2(-1500, 0))
+            ([pool, "del"])
+            // ([actNodeArr, true, [0, 0]])
+            .to(actNodeArr, 0, cc.v2(0, 0), function (i, node) {
+                // let y = ((y1 - y0 - h * n) / (n + 1) + 0.5 * h) * (i + 1) + y0;
+                let y = (y1 - y0 + h) / (n + 1) * (i + 1) - (0.5 * h) + y0;
+                return cc.v2(0, y);
+            })
+            .to([hjm._buttonLab.nextButton, ...actNodeArr], [this._delayTime], this._moveTime, [1, 1], cc.easeBackOut())();
         // lab 赋值， pool的离开， 奖励的出现， next的按钮
 
+    },
+
+    talk1LongOn (p, cardNode, name) {
+        this.showCardData(cardNode, name);
+        return true;
+    },
+
+    talk1End (p) {
+        hjm._cardDataLab = [false];
+    },
+
+    copySpr (node1, node2) {
+        let spr = node2.getComponent(cc.Sprite).spriteFrame;
+        node1.getComponent(cc.Sprite).spriteFrame = spr;
+    },
+
+    showCardData (card, name) {
+        let playColor = cc.color(233, 129, 4);
+        let stopColor = cc.color(110, 110, 110);
+
+        let showNode = hjm._cardDataLab;
+        showNode.active = true;
+
+        let cardType = 0;
+
+        this.copySpr(showNode.card, card.card);
+        
+        showNode.cardBg = true;
+
+        showNode.power = false; // 这个不显示
+
+        let data = dyl.data("card." + name, showNode);
+        // cc.log("showNode atk", showNode.atk);
+        // if (showNode.atk < 0) {
+        // showNode.Atk = showNode.atk > 0; 
+        let atkData = {
+            atk: showNode.atk < 0 ? NaN : showNode.atk,
+            def: showNode.def < 0 ? NaN : showNode.def,
+            type: "main"
+        };
+        let endData = atkData;
+        let fun = (name)=>{
+            if (isNaN(atkData[name])) {
+                showNode[name + "Lab"] = stopColor;
+                showNode[name] = false;
+                showNode[name + "AddLab"] = false;
+            }
+            else {
+                showNode[name + "Lab"] = playColor;
+                showNode[name] = true;
+                showNode[name + "AddLab"] = true;   
+                let addNum = endData[name] - atkData[name];
+                // cc.log("addNum", name, endData[name], atkData[name], addNum);
+                showNode[name] = atkData[name];
+                let str = "";
+                if (addNum > 0) {
+                    showNode[name + "AddLab"] = cc.color(0, 255, 0);
+                    str = "(+" + String(addNum) + ")";
+                }
+                else if (addNum < 0) {
+                    showNode[name + "AddLab"] = cc.color(255, 0, 0);
+                    str = "(" + String(addNum) + ")";
+                }
+                showNode[name + "AddLab"] = str;
+            }
+
+        }
+        fun("atk");
+        fun("def");
+
+        let showSkillStr = "";
+        let addStrToShowSkillStr = function (str) {
+            if (showSkillStr) {
+                showSkillStr += "\n";
+            }
+            showSkillStr += str;
+        }
+        if (data.mainSkillStr) {
+            let str = "技能(" + String(data.skillNum) + ")：" + data.mainSkillStr;
+            addStrToShowSkillStr(str);
+        }
+        if (data.friendSkillStr) {
+            let str = "辅助：" + data.friendSkillStr;
+            addStrToShowSkillStr(str);
+        }
+        showNode.skillStr = showSkillStr;
+
+        // showNode.mainSkillLab = playColor;
+
+        // let y = 0;
+        // let d = 230;
+        // if (data.mainSkill) {
+        //     showNode.mainSkill = true;
+        //     showNode.mainSkill = cc.v2(true, y);
+        //     y -= d;
+        // }
+        // else {
+        //     showNode.mainSkill = false;
+        //     // showNode.mainSkill = cc.v2(true, y);   
+        // }
+
+        // if (data.friendSkill) {
+        //     showNode.friendSkill = true;
+        //     showNode.friendSkill = cc.v2(true, y);
+        //     y -= d;
+        // }
+        // else {
+        //     showNode.friendSkill = false;
+        //     // showNode.mainSkill = cc.v2(true, y);   
+        // }
     },
 
     nextButton () {
@@ -231,15 +364,11 @@ cc.Class({
 
     newGameMainButton () {
         cc.log("newGameMainButton");
+        hjm(true); // 清空之前的存档
         let seedNum = Math.random() * 10000 + 23 >> 0;
         cc.log("随机种子是", seedNum);
         hjm.seedNum = seedNum;
         dyl.setRand(seedNum);
-        hjm.newCardId = -1;
-        hjm.newEnId = -1;
-        hjm.newTalkId = -1;
-        hjm.newEventId = -1;
-        hjm.deck = ["jian", "dun"];
         this.next();
     },
 

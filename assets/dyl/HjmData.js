@@ -26,17 +26,19 @@ window.initHjmDataFun = function () {
 	// 下面是 ai 的全局设置
 	// var funTab = _dylHjmDataFunTab();
 
-	ai._allCardNameArr = ["aa", "bb", "cc", "dd", "ee"];
-	ai._maxCardNum = 0; // 
+	ai._allCardNameArr = ["anjian", "chengzhang", "chongneng"];
+	ai._maxCardNum = 3; // 
 	ai.newCardNameArr = [];
 	
 
-	ai._allEnNameArr = funTab.dylDataIdToArr("en");
+	// ai._allEnNameArr = funTab.dylDataIdToArr("en");
+	ai._allEnNameArr = [];
 	ai._maxEnNum = 0;
 	ai.newEnNameArr = [];
 	
 
-	ai._allTalkNameArr = funTab.tabToNameArr(dylTalkData);
+	// ai._allTalkNameArr = funTab.tabToNameArr(dylTalkData);
+	ai._allTalkNameArr = [];
 	ai._maxTalkNum = 5;
 	ai.newTalkNameArr = [];
 	
