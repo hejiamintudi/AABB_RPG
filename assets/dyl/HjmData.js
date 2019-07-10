@@ -12,13 +12,13 @@ cc.log(cc.sys.isNative);
 window.initHjmDataFun = function () {
 	// hjm("levelId", -1); // 存档
 
-	hjm("coin", 12);
-	hjm("deck", ["jian", "dun"]);
+	hjm("coin", 12, true);
+	hjm("deck", ["jian", "dun"], true);
 
-	hjm("newCardId", -1); // 当前新卡id
-	hjm("newEnId", -1); // 当前新卡id
-	hjm("newTalkId", -1); // 当前事件id
-	hjm("newEventId", -1); // 存档
+	hjm("newCardId", -1, true); // 当前新卡id
+	hjm("newEnId", -1, true); // 当前新卡id
+	hjm("newTalkId", -1, true); // 当前事件id
+	hjm("newEventId", -1, true); // 存档
 
 	hjm("seedNum", 0); // 随机种子
 

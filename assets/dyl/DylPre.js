@@ -61,6 +61,9 @@ cc.director.on(cc.Director.EVENT_AFTER_UPDATE, function () {
     // cc.log(dt, "end");
     for (var i = updateFunArr.length - 1; i >= 0; i--) {
         var fun = updateFunArr[i];
+        if (!fun.isRun) {
+            continue;
+        }
         if (!fun.nowFun(dt)) {
             if (!fun.nowFun.nextFun) {
                 fun._dylIsDel = true;   
@@ -1056,6 +1059,8 @@ window.initDylFun = function (cryptoJS) {
             fun.nowFun = fun;
             fun.endFun = fun;
 
+            fun.isRun = true;
+
             fun.id = updateFunArr.length;
             updateFunArr.push(fun);
         }
@@ -1064,6 +1069,9 @@ window.initDylFun = function (cryptoJS) {
             fun = arr[0];
             fun.nowFun = fun;
             fun.endFun = arr[arr.length - 1];
+
+            fun.isRun = true;
+
             for (var i = 0; i < arr.length - 1; i++) {
                 arr[i].nextFun = arr[i + 1];
             }
@@ -1072,9 +1080,40 @@ window.initDylFun = function (cryptoJS) {
             updateFunArr.push(fun);
         }
         var delFun = function delFun(newFun) {
+            var isRun = true; // 以fun为标准，如果fun为空，那就用这个代替
+            if (typeof newFun === "boolean") { // 是否在update里面运行
+                if (fun) {
+                    fun.isRun = newFun;
+                }
+                else {
+                    isRun = newFun;
+                }
+                return;
+            }
+            else if (newFun === null) { // 是否要跳过当前函数
+                if (!fun) {
+                    return;
+                }
+                if (!fun.nowFun.nextFun) {
+                    fun._dylIsDel = true;   
+                    var tmpId = fun.id;
+                    updateFunArr[tmpId] = updateFunArr[updateFunArr.length - 1];
+                    updateFunArr[tmpId].id = tmpId;
+                    updateFunArr.length--; 
+                }
+                else {
+                    fun.nowFun = fun.nowFun.nextFun;
+                }
+                return;
+            }
+
+
+///////////////////////////////
             if (fun && fun._dylIsDel) {
+                isRun = fun.isRun;
                 fun = null;
             }
+
 
             // 参数是数组
             if (Array.isArray(newFun)) {
@@ -1085,6 +1124,9 @@ window.initDylFun = function (cryptoJS) {
                     fun = arr[0];
                     fun.nowFun = fun;
                     fun.endFun = fun;
+
+                    fun.isRun = isRun;
+
                     fun.id = updateFunArr.length;
                     updateFunArr.push(fun);
                 }
@@ -1125,6 +1167,8 @@ window.initDylFun = function (cryptoJS) {
                 updateFunArr.push(fun);
                 fun.endFun = fun;
                 fun.nowFun = fun;
+
+                fun.isRun = isRun;
                 return;
             }
             // else if (!fun || fun._dylIsDel) {
