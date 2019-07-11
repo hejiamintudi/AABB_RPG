@@ -104,7 +104,7 @@ cc.Class({
     next () { // 下一个状态
         let e1 = this._nowEvent;
         let e2 = this._nowEvent = ai.eventArr[++hjm.newEventId];
-        // cc.log("next", e1, "...", e2, "||||");
+        cc.log("next", e1, "...", e2, "||||");
         this.changeEvent(e1, e2);
     },
 
@@ -130,7 +130,7 @@ cc.Class({
             dyl.arr(mainButtonArr, false);
             end();
         }
-        tz().by(mainButtonArr, [this._delayTime], this._moveTime, cc.v2(-1000, 0))(endFun)();
+        tz().by(mainButtonArr, [this._delayTime], this._moveTime, cc.v2(-1500, 0))(endFun)();
     },
 
 // talk 聊天界面
@@ -208,19 +208,39 @@ cc.Class({
         // hjm._buttonLab.nextButton = true;
         let actNodeArr = []; // 这是奖励节点数组
 
+        if (data.maxHp) {
+            hjm.maxHp += data.maxHp;
+            if (data.maxHp > 0) {
+                hjm._talk_rewardLab.maxHpLab.num = "+" + data.maxHp;
+            }
+            else if (data.maxHp < 0) {
+                hjm._talk_rewardLab.maxHpLab.num = "" + data.maxHp;    
+            }
+            actNodeArr.push(hjm._talk_rewardLab.maxHpLab);
+        }
+        if (data.hp) {
+            hjm.hp += data.hp;
+            if (data.hp > 0) {
+                hjm._talk_rewardLab.hpLab.num = "+" + data.hp;
+            }
+            else if (data.hp < 0) {
+                hjm._talk_rewardLab.hpLab.num = "" + data.hp;    
+            }
+            actNodeArr.push(hjm._talk_rewardLab.hpLab);
+        }
         if (data.coin) {
-            hjm._talk_coinLab.num = "+" + String(data.coin);
+            hjm._talk_rewardLab.coinLab.num = "+" + String(data.coin);
             hjm.coin += data.coin;
-            actNodeArr.push(hjm._talk_coinLab);
+            actNodeArr.push(hjm._talk_rewardLab.coinLab);
         }
         if (data.card) {
             let newCardName = ai.newCardNameArr[++hjm.newCardId];
             // cc.log("card", newCardName);
-            hjm._talk_cardLab.active = true;
-            hjm[newCardName] = hjm._talk_cardLab.card; // 加载图片
+            hjm._talk_rewardLab.cardLab.active = true;
+            hjm[newCardName] = hjm._talk_rewardLab.cardLab.card; // 加载图片
             hjm.deck.push(newCardName);
-            actNodeArr.push(hjm._talk_cardLab);
-            this.node.touch = ["talk1", hjm._talk_cardLab, newCardName];
+            actNodeArr.push(hjm._talk_rewardLab.cardLab);
+            this.node.touch = ["talk1", hjm._talk_rewardLab.cardLab, newCardName];
         }
 
         let y0 = -368; // 下边界的 y 坐标
@@ -359,7 +379,27 @@ cc.Class({
 
     nextButton () {
         cc.log("nextButton");
-        this.next();
+        let e = this._nowEvent;
+        if (e === "talk") {
+            let nodeArr = [hjm._buttonLab.nextButton, ...hjm._talk_rewardLab.getChildren()];
+            // hjm._talk_rewardLab.coinLab.active && nodeArr.push(hjm._talk_rewardLab.coinLab);
+            // hjm._talk_rewardLab.cardLab.active && nodeArr.push(hjm._talk_rewardLab.cardLab);
+            dyl.arr(nodeArr, (i, node)=>{
+                if (!node.active) {
+                    return null;
+                }
+            })
+            tz().to(hjm._talk_lab, this._moveTime, cc.v2(0, 1500))
+                .to(nodeArr, this._moveTime, [0, 0])
+                ([nodeArr, false])
+                ([[hjm._talk_lab], false])(()=>{
+                    this._nowEvent = null;
+                    this.next();
+                })();
+        }
+        else {
+            this.next();
+        }
     },
 
     newGameMainButton () {

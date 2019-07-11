@@ -1556,7 +1556,6 @@ window.initDylFun = function (cryptoJS) {
             }
 
         }
-        
         for (i = 0; i < nodeArr.length; i++) {
             var node = nodeArr[i];
     // 遇到删除，或者替代操作，那就不应该进行下面的赋值操作; 替代删除只能进行一次
@@ -1604,6 +1603,9 @@ window.initDylFun = function (cryptoJS) {
                     //     return cc.error("已经删除过了，不能再删除替代了");
                     // }
                     nodeArr.splice(i, 1, ...value);
+                    if (nodeArr.length <= i) { // 已经全部删除了
+                        return true;
+                    }
                     node = nodeArr[i];
                     // i--;
                     // isContinue = true;
@@ -1614,6 +1616,9 @@ window.initDylFun = function (cryptoJS) {
                     //     return cc.error("已经删除过了，不能再删除替代了");
                     // }
                     nodeArr.splice(i, 1);
+                    if (nodeArr.length <= i) { // 已经全部删除了
+                        return true;
+                    }
                     node = nodeArr[i];
                     // i--;
                     // isContinue = true;
@@ -1659,6 +1664,7 @@ window.initDylFun = function (cryptoJS) {
                     node.setPosition(x, y);
                 }
                 else {
+                    cc.log("node", node, id, tab);
                     node[id] = tab[id];
                 }
             }

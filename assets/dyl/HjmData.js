@@ -22,6 +22,18 @@ window.initHjmDataFun = function () {
 
 	hjm("seedNum", 0); // 随机种子
 
+	hjm("hp", 10, true);
+	hjm("maxHp", 10, true);
+
+	hjm.hp = function (newValue, oldValue) {
+		if (newValue > hjm.maxHp) {
+			newValue = hjm.maxHp;
+		}
+		else if (newValue < 0) {
+			newValue = 0;
+		}
+	}
+
 	/////////////////////// 
 	// 下面是 ai 的全局设置
 	// var funTab = _dylHjmDataFunTab();

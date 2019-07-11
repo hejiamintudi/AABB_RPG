@@ -510,34 +510,6 @@ window.tz = function (node, ...argArr) {
     					i++;
         			}
 
-        			// // 初始化节点数组 和 偏移数组
-        			// for (i; i < arr.length; i++) {
-        			// 	// cc.log("arr", i, arr[i], Array.isArray(arr[i]));
-        			// 	if (Array.isArray(arr[i])) {
-        			// 		if (typeof arr[i][0].getChildren === "function") {
-        			// 			nodeArr = arr[i];
-        			// 		}
-        			// 		else {
-        			// 			diffArr = arr[i];
-        			// 		}
-        			// 	}
-        			// 	else {
-        			// 		break;
-        			// 	}
-        			// }
-
-        			// // 节点数组的补充，就是非数组的时候，可能直接是一个节点，或者默认节点
-        			// if (typeof arr[i].getChildren === "function") {
-        			// 	if (nodeArr) {
-        			// 		return cc.error("tz 已经有了数组，那就别再加节点了", arr[i]);
-        			// 	}
-        			// 	nodeArr = [arr[i]];
-        			// 	i++;
-        			// }
-        			// else if (!nodeArr){
-        			// 	nodeArr = [defaultNode];
-        			// }
-
 
         			let delayTime = 0;
         			let diff_delayTime = 0;
@@ -786,61 +758,9 @@ window.tz = function (node, ...argArr) {
 	        				setData("rotate");
 	        				setData("scale");
 	        				setData("color");
-	        				
-							// if (pos === true) {
-// 	        					let move = cc.moveTo(t, diff_pos.mul(i).add(tmpNode));
-// 	        					addActFun(move, tmpNode, i * diff_delayTime);
-// 	        				}
-// 	        				else if (pos) { 
-// 	        					// cc.log("pos", t, diff_pos.mul(i).add(pos));
-// 	        					let move = cc.moveTo(t, diff_pos.mul(i).add(pos));
-// 	        					addActFun(move, tmpNode, i * diff_delayTime);
-// 	        				}
-
-// 	        				if (opacity === true) {
-// 	        					let fade = cc.fadeTo(t, diff_opacity * i + tmpNode.opacity);
-// 	        					addActFun(fade, tmpNode, i * diff_delayTime);
-// 	        				}
-// 	        				else if (opacity !== null) {
-// 	        					let fade = cc.fadeTo(t, diff_opacity * i + opacity);
-// 	        					addActFun(fade, tmpNode, i * diff_delayTime);
-// 	        				}
-
-// 	        				if (scale === true) {
-// 	        					let act1 = cc.scaleTo(t, diff_scale[0] * i + tmpNode.scaleX, diff_scale[1] * i + tmpNode.scaleY);
-// 	        					addActFun(act1, tmpNode, i * diff_delayTime);
-// 	        				}
-// 	        				else if (scale !== null) {
-// 	        					let act1 = cc.scaleTo(t, diff_scale[0] * i + scale[0], diff_scale[1] * i + scale[1]);
-// 	        					addActFun(act1, tmpNode, i * diff_delayTime);	
-// 	        				}
-
-// 	        				if (color === true) {
-// 	        					let {r, g, b} = diff_color;
-// 	        					let act1 = cc.tintTo(t, r * i + tmpNode.color.r, g * i + tmpNode.color.g, b * i + tmpNode.color.b);
-// 	        					addActFun(act1, tmpNode, i * diff_delayTime);
-// 	        				}
-// 	        				else if (color !== null) {
-// 	        					let {r, g, b} = diff_color;
-// 	        					let act1 = cc.tintTo(t, r * i + color.r, g * i + color.g, b * i + color.b);
-// 	        					addActFun(act1, tmpNode, i * diff_delayTime);	
-// 	        				}
-
 	        			}
         			}
         			else if (actName === "by") {
-        				// if (color === true) {
-        				// 	color = cc.color(0, 0, 0);
-        				// }
-        				// if (opacity === true) {
-        				// 	opacity = 0;
-        				// }
-        				// if (scale === true) {
-        				// 	scale = [0, 0];
-        				// }
-        				// if (pos === true) {
-        				// 	pos = cc.v2(0, 0);
-        				// } 
         				for (i = 0; i < nodeArr.length; i++) {
 	        				let tmpNode = nodeArr[i];
 
@@ -972,6 +892,9 @@ window.tz = function (node, ...argArr) {
         				for (let i = 0; i < actArr.length; i++) {
         					// stopActArr.push({node: actArr[i].node, act: actArr[i]});
         					// cc.log(i, actArr[i]);
+        					if (!actArr[i].node.active) {
+        						return cc.warn(actName + "存在节点的active为否", actArr[i].node);
+        					}
         					actArr[i].node.runAction(actArr[i]);
         				}
         				tmpDel();
@@ -994,30 +917,6 @@ window.tz = function (node, ...argArr) {
         				arr.pop();
         				ease = easeType;
         			}
-        			// if (easeType === "add") {
-        			// 	arr.pop();
-        			// 	ease = cc.easeIn(2.0);
-        			// }
-        			// else if (easeType === "sub") {
-        			// 	arr.pop();
-        			// 	ease = cc.easeOut(2.0);
-        			// }
-        			// else if (easeType === "addSub") {
-        			// 	arr.pop();
-        			// 	ease = cc.easeInOut(2.0);
-        			// }
-        			// else if (easeType === "backAdd") {
-        			// 	arr.pop();
-        			// 	ease = cc.easeBackIn();
-        			// }
-        			// else if (easeType === "subBack") {
-        			// 	arr.pop();
-        			// 	ease = cc.easeBackOut();
-        			// }
-        			// else if (easeType === "backAddSubBack") {
-        			// 	arr.pop();
-        			// 	ease = cc.easeBackInOut();
-        			// }
         			/////////////////////////////////////////
 
         			act = cc[actName](...arr);
