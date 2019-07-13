@@ -119,12 +119,14 @@ cc.Class({
 
 // main 开始界面
     mainCome (end) {
+        hjm._other = [false];
         let mainButtonArr = this.getMainButtonArr();
         dyl.arr(mainButtonArr, true, cc.v2(1000, true));
         tz().by(mainButtonArr, [this._delayTime], this._moveTime, cc.v2(-1000, 0))(end)();
     },
 
     mainLeave (end) {
+        hjm._other = [true];
         let mainButtonArr = this.getMainButtonArr();
         let endFun = function () {
             dyl.arr(mainButtonArr, false);
@@ -276,6 +278,52 @@ cc.Class({
         hjm._cardDataLab = [false];
     },
 
+////////////// shop
+    shopCome (end) {
+        for (let i = 0; i < 3; i++) {
+            let name = ai.newCardNameArr[++hjm.newCardId];
+            let node = hjm._shop_pool.add();
+            hjm[name] = node.card;
+            node.name = name;
+            let coin = dyl.data("card." + name).coin// 价格
+            node.button.add("deck." + name, coin);
+        }
+        let nodeArr = hjm._shop_pool.pool;
+        // let y = nodeArr[0].y; // 固定高度
+        let d = 200;
+        dyl.arr(nodeArr, cc.v2(1500, y));
+        tz([hjm._cardDataLab, true])
+          ([hjm._buttonLab.nextButton, true, [0, 0]])
+          ([hjm._cardDataLab.bg1, false])
+            .by(hjm._cardDataLab, 0, cc.v2(0, 1000))
+            ._by(hjm._cardDataLab, this._moveTime, cc.v2(0, -1000), cc.easeBackOut())
+             to(hjm._buttonLab.nextButton, this._moveTime, [1, 1], cc.easeBackOut())
+            ._to(nodeArr, [this._delayTime, cc.v2(d, 0)], this._moveTime, cc.v2(-d, true))
+             (end)();
+        // this.showCardData(nodeArr[0], nodeArr[0].name);
+        hjm._shop_choose = [true];
+        this.shopChoose(nodeArr[0]);
+    },
+
+    shopLeave (end) {
+        hjm._shop_choose = [false];
+        hjm._cardDataLab.bg1 = true;
+        // hjm._cardDataLab = [false
+    },
+
+    shopChoose (node) {
+        this.showCardData(node, node.name);
+        hjm._shop_choose = [cc.v2(node)];
+    },
+
+    shopOn (p) {
+        let node = p.in(...hjm._shop_pool.pool);
+        if (!node) {
+            return;
+        }
+        this.shopChoose(node);
+    },
+
     copySpr (node1, node2) {
         let spr = node2.getComponent(cc.Sprite).spriteFrame;
         node1.getComponent(cc.Sprite).spriteFrame = spr;
@@ -384,13 +432,15 @@ cc.Class({
             let nodeArr = [hjm._buttonLab.nextButton, ...hjm._talk_rewardLab.getChildren()];
             // hjm._talk_rewardLab.coinLab.active && nodeArr.push(hjm._talk_rewardLab.coinLab);
             // hjm._talk_rewardLab.cardLab.active && nodeArr.push(hjm._talk_rewardLab.cardLab);
+            cc.log("nodeArr1", nodeArr);
             dyl.arr(nodeArr, (i, node)=>{
                 if (!node.active) {
                     return null;
                 }
             })
-            tz().to(hjm._talk_lab, this._moveTime, cc.v2(0, 1500))
-                .to(nodeArr, this._moveTime, [0, 0])
+            cc.log("nodeArr2", nodeArr);
+            tz()._to(hjm._talk_lab, this._moveTime, cc.v2(0, 1500))
+                ._to(nodeArr, this._moveTime, [0, 0])
                 ([nodeArr, false])
                 ([[hjm._talk_lab], false])(()=>{
                     this._nowEvent = null;

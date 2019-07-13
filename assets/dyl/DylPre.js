@@ -1560,10 +1560,9 @@ window.initDylFun = function (cryptoJS) {
             var node = nodeArr[i];
     // 遇到删除，或者替代操作，那就不应该进行下面的赋值操作; 替代删除只能进行一次
             // var isContinue = false; 
+            var isDel = false;
             for (var j = 0; j < tab.funArr.length; j++) {
                 var value = tab.funArr[j](i, nodeArr[i]);
-                // cc.log("fun", value);
-                // cc.log(value, typeof value);
                 var className = null;
                 if (value && (typeof value === "object") && (!value.getChildren) && (value.x !== undefined) && (value.y !== undefined)) {
                     className = "cc.Vec2";
@@ -1603,26 +1602,24 @@ window.initDylFun = function (cryptoJS) {
                     //     return cc.error("已经删除过了，不能再删除替代了");
                     // }
                     nodeArr.splice(i, 1, ...value);
-                    if (nodeArr.length <= i) { // 已经全部删除了
-                        return true;
-                    }
-                    node = nodeArr[i];
-                    // i--;
-                    // isContinue = true;
-                    // continue;
+                    isDel = true;
+                    break;
+                    // if (nodeArr.length <= i) { // 已经全部删除了
+                    //     return true;
+                    // }
+                    // node = nodeArr[i];
                 }
                 else if (value === null) { // 只是删除而已
                     // if (isContinue) {
                     //     return cc.error("已经删除过了，不能再删除替代了");
                     // }
                     nodeArr.splice(i, 1);
-                    if (nodeArr.length <= i) { // 已经全部删除了
-                        return true;
-                    }
-                    node = nodeArr[i];
-                    // i--;
-                    // isContinue = true;
-                    // continue;
+                    isDel = true;
+                    break;
+                    // if (nodeArr.length <= i) { // 已经全部删除了
+                    //     return true;
+                    // }
+                    // node = nodeArr[i];
                 }
                 else if (className === "cc.Vec2") { // 位置
                     if (tab.position === undefined && i > 0) {
@@ -1652,6 +1649,11 @@ window.initDylFun = function (cryptoJS) {
                 else {
                     cc.error("dyl.arr 000 这个参数类型没有考虑过", value);
                 }
+            }
+
+            if (isDel) {
+                i--;
+                continue;
             }
             // if (isContinue) {
             //     continue;

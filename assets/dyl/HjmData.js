@@ -25,12 +25,53 @@ window.initHjmDataFun = function () {
 	hjm("hp", 10, true);
 	hjm("maxHp", 10, true);
 
-	hjm.hp = function (newValue, oldValue) {
+	hjm.hp = function (newValue, oldValue, labArr) {
 		if (newValue > hjm.maxHp) {
 			newValue = hjm.maxHp;
 		}
 		else if (newValue < 0) {
 			newValue = 0;
+		}
+		else {
+			var timeFun = function (node) {
+				setTimeout(function(){
+					if (cc.isValid(node)) {
+						node.setScale(1);
+					}
+				}, 100);
+			}
+			for (var i = labArr.length - 1; i >= 0; i--) {
+				labArr[i].node.setScale(1.5);
+				timeFun(labArr[i].node);
+			}
+		}
+	}
+
+	hjm.maxHp = function (newValue, oldValue, labArr) {
+		var timeFun = function (node) {
+			setTimeout(function(){
+				if (cc.isValid(node)) {
+					node.setScale(1);
+				}
+			}, 100);
+		}
+		for (var i = labArr.length - 1; i >= 0; i--) {
+			labArr[i].node.setScale(1.5);
+			timeFun(labArr[i].node);
+		}
+	}
+
+	hjm.coin = function (newValue, oldValue, labArr) {
+		var timeFun = function (node) {
+			setTimeout(function(){
+				if (cc.isValid(node)) {
+					node.setScale(1);
+				}
+			}, 100);
+		}
+		for (var i = labArr.length - 1; i >= 0; i--) {
+			labArr[i].node.setScale(1.5);
+			timeFun(labArr[i].node);
 		}
 	}
 
