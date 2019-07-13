@@ -82,7 +82,7 @@ cc.Class({
         ai.newCardNameArr = getNewArr(ai._maxCardNum, ai._allCardNameArr); // 新卡将会按顺序从这个数组里面开始获取，暂时直接用_maxCardNum，以后是直接根据动态生成这个数量
         ai.newEnNameArr = getNewArr(ai._maxEnNum,  ai._allEnNameArr);
         ai.newTalkNameArr = getNewArr(ai._maxTalkNum, ai._allTalkNameArr);
-        ai.eventArr = getEventArr(["talk", 5]);
+        ai.eventArr = getEventArr(["talk", 2, "shop", 1]);
     },
 
     initVar () {
@@ -291,29 +291,36 @@ cc.Class({
         let nodeArr = hjm._shop_pool.pool;
         // let y = nodeArr[0].y; // 固定高度
         let d = 200;
-        dyl.arr(nodeArr, cc.v2(1500, y));
-        tz([hjm._cardDataLab, true])
-          ([hjm._buttonLab.nextButton, true, [0, 0]])
+        dyl.arr(nodeArr, cc.v2(1500, true));
+        hjm._cardDataLab = [true];
+        tz([hjm._buttonLab.nextButton, true, [0, 0]])
           ([hjm._cardDataLab.bg1, false])
             .by(hjm._cardDataLab, 0, cc.v2(0, 1000))
             ._by(hjm._cardDataLab, this._moveTime, cc.v2(0, -1000), cc.easeBackOut())
-             to(hjm._buttonLab.nextButton, this._moveTime, [1, 1], cc.easeBackOut())
+             .to(hjm._buttonLab.nextButton, this._moveTime, [1, 1], cc.easeBackOut())
             ._to(nodeArr, [this._delayTime, cc.v2(d, 0)], this._moveTime, cc.v2(-d, true))
-             (end)();
+             (()=>{
+                hjm._shop_choose = [true];
+                this.shopChoose(nodeArr[0]);
+             })(end)();
         // this.showCardData(nodeArr[0], nodeArr[0].name);
-        hjm._shop_choose = [true];
-        this.shopChoose(nodeArr[0]);
+        
     },
-
+// pool cardDataLab-bg1 nextButton  shop_choose
     shopLeave (end) {
         hjm._shop_choose = [false];
         hjm._cardDataLab.bg1 = true;
-        // hjm._cardDataLab = [false
+        hjm._cardDataLab = [false];
+        let pool = [...hjm._shop_pool.pool];
+        tz()._by(pool, [this._delayTime], this._moveTime, cc.v2(-1500, 0))
+            ._to(hjm._buttonLab.nextButton, this._moveTime, [0, 0])
+            ([hjm._buttonLab.nextButton, false])(end)();
     },
 
     shopChoose (node) {
         this.showCardData(node, node.name);
-        hjm._shop_choose = [cc.v2(node)];
+        cc.log("shop_choose", node.x, node.y, node);
+        hjm._shop_choose = [cc.v2(node.x, true)];
     },
 
     shopOn (p) {

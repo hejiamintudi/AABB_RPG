@@ -157,15 +157,34 @@ cc.Class({
             this.initBuy();
         }
     },
+
+    initBuy: function () {
+        this.node.add = (...arr)=>{
+            for (let i = arr.length - 1; i >= 0; i--) {
+                let val = arr[i];
+                if (typeof val === "number") {
+                    this.coin = val;
+                }
+                else if (typeof val === "string") {
+                    this.toolName = val;
+                }
+                else if (typeof val === "function") {
+                    this.endCheckBuyFun = val;
+                }
+            }
+            this.initBuy1();
+        }
+        if (this.toolName !== "") {
+            this.initBuy1();
+            return;
+        }
+    },
+
     //  购买add 参数如下： 顺序数量可以随意
     //     价格：数字。 
     //     物品路径： .隔开，来自于数组，或者对象是bool，只能买一个。如果对象是数字可以买多个。 
     //     检测函数： 就要购买成功前的检查，可以控制购买数量等
-    initBuy: function () {
-        if (this.toolName === "") {
-            return;
-        }
-
+    initBuy1: function () {
         this.dyl_noMoneyNode = this.node.getChildByName("noMoney");
         let labNode = this.node.getChildByName("coinNum");
         if (labNode) {
@@ -278,22 +297,6 @@ cc.Class({
             }
         }
         _hjmAddArrFun(this.coinName, this.dyl_updateBuy);
-
-        this.node.add = (...arr)=>{
-            for (let i = arr.length - 1; i >= 0; i--) {
-                let val = arr[i];
-                if (typeof val === "number") {
-                    this.coin = val;
-                }
-                else if (typeof val === "string") {
-                    this.toolName = val;
-                }
-                else if (typeof val === "function") {
-                    this.endCheckBuyFun = val;
-                }
-            }
-            this.initBuy();
-        }
 
         this.dyl_updateBuy();
     },

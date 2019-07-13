@@ -1666,7 +1666,7 @@ window.initDylFun = function (cryptoJS) {
                     node.setPosition(x, y);
                 }
                 else {
-                    cc.log("node", node, id, tab);
+                    // cc.log("node", node, id, tab);
                     node[id] = tab[id];
                 }
             }

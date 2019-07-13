@@ -305,7 +305,7 @@ window.tz = function (node, ...argArr) {
 						}
 					}
 					else {
-						return cc.error("完全不知道怎么处理");
+						return cc.error("完全不知道怎么处理", val);
 					}
 				}
 			}

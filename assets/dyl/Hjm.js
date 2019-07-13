@@ -648,8 +648,14 @@ window.hjm = null;
                                         tmpNode.rotation = tmpValue[0];
                                     }
                                 }
-                                else if (cc.js.getClassName(tmpValue) === "cc.Vec2") { // 位置
-                                    tmpNode.position = tmpValue;
+                                else if (tmpValue && (typeof tmpValue === "object") && (!tmpValue.getChildren) && (tmpValue.x !== undefined) && (tmpValue.y !== undefined)) { // 位置
+                                    if (tmpValue.x !== true) {
+                                        tmpNode.x = tmpValue.x;
+                                    }
+                                    if (tmpValue.y !== true) {
+                                        tmpNode.y = tmpValue.y;
+                                    }
+                                    // tmpNode.position = tmpValue;
                                 }
                                 else if (cc.js.getClassName(tmpValue) === "cc.Color") {
                                     tmpNode.color = tmpValue;
@@ -679,19 +685,19 @@ window.hjm = null;
             }
         });
     };
+    window._hjmAddArrFun = function (name, fun) {
+        tab[name].funArr.push(fun);
+    };
+
+    window._hjmDelArrFun = function (name, fun) {
+        var index = tab[name].funArr.indexOf(fun);
+        if (index === -1) {
+            return cc.error("没有这个函数");
+        }
+        tab[name].funArr.splice(index, 1);
+    };
 })();
 
-window._hjmAddArrFun = function (name, fun) {
-    tab[name].funArr.push(fun);
-};
-
-window._hjmDelArrFun = function (name, fun) {
-    var index = tab[name].funArr.indexOf(fun);
-    if (index === -1) {
-        return cc.error("没有这个函数");
-    }
-    tab[name].funArr.splice(index, 1);
-};
 
 if (window.initHjmDataFun && window.isCryptoJS && window.initDylFun) {
     cc.log("init hjm");
