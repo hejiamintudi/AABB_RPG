@@ -55,7 +55,6 @@ cc.Class({
         // newNode.removeComponent("DylPool");
 
         // cc.log("newNode", newNode.getComponent("DylPool")); 
-        newNode.parent = this.node;
         newNode.dylSpriteNodeName = newNode.name; // 先保存之前的，方便动态加载图片
         newNode.name = "tmp";
         // newNode.setPosition(cc.v2(0, 0));
@@ -76,6 +75,7 @@ cc.Class({
         newNode.setPosition(this.node);
 
         this.node.setPosition(nowNodePos);
+        newNode.parent = this.node;
         // top.parent = this.node;
     },
 

@@ -15,6 +15,10 @@ cc.Class({
     },
 
     dylPreload: function () {
+        if (this.node._hasDylLabInit) {
+            return;
+        }
+        this.node._hasDylLabInit = true;
         // cc.log("__preload");
         this._data = {}; // name: nodeArr nodeArr.value
 

@@ -292,8 +292,9 @@ cc.Class({
         // let y = nodeArr[0].y; // 固定高度
         let d = 200;
         dyl.arr(nodeArr, cc.v2(1500, true));
-        hjm._cardDataLab = [true];
-        tz([hjm._buttonLab.nextButton, true, [0, 0]])
+        // hjm._cardDataLab = [true];
+        tz([hjm._cardDataLab, true])
+          ([hjm._buttonLab.nextButton, true, [0, 0]])
           ([hjm._cardDataLab.bg1, false])
             .by(hjm._cardDataLab, 0, cc.v2(0, 1000))
             ._by(hjm._cardDataLab, this._moveTime, cc.v2(0, -1000), cc.easeBackOut())

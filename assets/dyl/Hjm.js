@@ -94,6 +94,9 @@ window.hjm = null;
     var getLab = function getLab(node) {
         // let lab = node.getComponent(cc.Label);
         var name = node.name;
+        if (node.getComponent("DylLab") && !node._hasDylLabInit) {
+            node.getComponent("DylLab").dylPreload();
+        }
         if (name[0] === "_") {
             tab[node.name] = node;
             hasTab[node.name] = true;
