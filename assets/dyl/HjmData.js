@@ -14,6 +14,7 @@ window.initHjmDataFun = function () {
 
 	hjm("coin", 12, true);
 	hjm("deck", ["jian", "dun"], true);
+	hjm("playDeck", ["jian", "dun"], true);
 
 	hjm("newCardId", -1, true); // 当前新卡id
 	hjm("newEnId", -1, true); // 当前新卡id

@@ -87,6 +87,11 @@ cc.Class({
 
     initVar () {
         this._nowEvent = "main"; // 当前事件是空
+        this._saveTouchState = null; // 当进入卡库的时候，暂时保存touch状态
+        this._deck_playButtonArr = [];
+        this._deck_maxPlayDeckNum = 2; // 最大的出场手牌种数
+        this._deck_tab = {}; // name: bool 用来判断这个卡牌是否出场
+        this._tipId = 0; // 识别tip，防止出现显示隐藏的bug
     },
 
     changeEvent (e1, e2) {
@@ -104,7 +109,7 @@ cc.Class({
     next () { // 下一个状态
         let e1 = this._nowEvent;
         let e2 = this._nowEvent = ai.eventArr[++hjm.newEventId];
-        cc.log("next", e1, "...", e2, "||||");
+        // cc.log("next", e1, "...", e2, "||||");
         this.changeEvent(e1, e2);
     },
 
@@ -203,6 +208,11 @@ cc.Class({
         if (data.replay === "") {
             return this.next();
         }
+        ////////////// 暂时还没有接入广告，暂时删除
+        if (data.ad) {
+            return this.next();
+        }
+        ////////////////
 
         // 赋值 数据处理
         let newCard = null;
@@ -301,7 +311,7 @@ cc.Class({
              .to(hjm._buttonLab.nextButton, this._moveTime, [1, 1], cc.easeBackOut())
             ._to(nodeArr, [this._delayTime, cc.v2(d, 0)], this._moveTime, cc.v2(-d, true))
              (()=>{
-                hjm._shop_choose = [true];
+                hjm._choose_spr = [true];
                 this.shopChoose(nodeArr[0]);
              })(end)();
         // this.showCardData(nodeArr[0], nodeArr[0].name);
@@ -309,7 +319,7 @@ cc.Class({
     },
 // pool cardDataLab-bg1 nextButton  shop_choose
     shopLeave (end) {
-        hjm._shop_choose = [false];
+        hjm._choose_spr = [false];
         hjm._cardDataLab.bg1 = true;
         hjm._cardDataLab = [false];
         let pool = [...hjm._shop_pool.pool];
@@ -321,7 +331,7 @@ cc.Class({
     shopChoose (node) {
         this.showCardData(node, node.name);
         cc.log("shop_choose", node.x, node.y, node);
-        hjm._shop_choose = [cc.v2(node.x, true)];
+        hjm._choose_spr = [cc.v2(node.x, true)];
     },
 
     shopOn (p) {
@@ -330,6 +340,123 @@ cc.Class({
             return;
         }
         this.shopChoose(node);
+    },
+
+    tipFun (str) {
+        hjm._tip_lab = [true];
+        let id = ++hjm._tipId;
+        setTimeout(()=>{
+            if (id === hjm._tipId) {
+                hjm._tip_lab = [false];
+            }
+        }, 1000);
+    },
+
+    deckButton () {
+        // 退出卡库状态
+        if (this.node.touch === "deck") {
+            this.node.touch = this._saveTouchState;
+            this.changeEvent("deck", this._saveTouchState);
+            hjm.playDeck = hjm.playDeck;
+        }
+        else { // 进入卡库状态
+            this._deck_playButtonArr = [];
+            this._saveTouchState = this._nowEvent;
+            this.changeEvent(this._nowEvent, "deck");
+        }
+    },
+
+// ui: _cardDataLab _deck_pool _deck_list
+    deckCome (end) {
+        let playDeck = hjm.playDeck;
+        let deck = hjm.deck;
+        let pool = []; // 出场展示
+        let tab = {}; // 是否出场 name: bool
+        this._deck_tab = tab;
+        // tab node.name pool
+        for (let i = 0; i < deck.length; i++) {
+            let name = deck[i];
+            tab[name] = true;
+            let node = hjm._deck_pool.add();
+            node.name = name;
+            hjm[name] = node.card;
+            pool.push(node);
+        }
+        // this._deck_playButtonArr = [...pool];
+
+        let oriNode = null;
+
+        let initFun = (i, node)=>{
+            this._deck_playButtonArr.push(node.button);
+
+            let name = node.name;
+            hjm[name] = node.card;
+            this.deckPlayButton(node, !!tab[name]);
+            if (i === 0) {
+                oriNode = node;
+            }
+        }
+
+        let touchCardFun = ((i, node)=>this.deckTouchShowCardData(node));
+        
+        hjm._deck_list.add(initFun, touchCardFun, 5);
+
+        this.deckResetPoolArr();
+        // _cardDataLab pool _deck_list, choose
+        tz([[hjm._cardDataLab, hjm._deck_list], true])
+            // .to(pool, [this._delayTime, cc.v2(160, 0)], this._moveTime, cc.v2(-600, true))
+            ([hjm._choose_spr, true])(()=>touchCardFun(0, oriNode))();
+    },
+
+    deckTouchShowCardData (node) {
+        hjm._choose_spr = [cc.v2(node).add(node.parent)];
+        this.showCardData(node, node.name);
+    },
+
+    deckResetPoolArr () {
+        let arr = [...hjm._deck_pool.pool];
+        tz().to(pool, [cc.v2(160, 0)], 0, cc.v2(-600, true))();
+    },
+
+    deckPlayButton (node, isPlay) {
+        let pool = hjm._deck_pool.pool;
+        let name = node.name;
+        if (isPlay) { // 点击了，
+            // 达到了最大的出场数，不能再出场了
+            if (pool.length >= this._deck_maxPlayDeckNum) { 
+                return this.tipFun("超出了手牌上限");
+            }
+            hjm.deck.push(name);
+            let newNode = hjm._deck_pool.add();
+            hjm[name] = newNode.card;
+        }
+        else {
+            let id = dyl.get(hjm.deck, "name");
+            dyl.set(hjm.deck, id);
+            node.del();
+        }
+        this.deckResetPoolArr();
+        this._deck_tab[name] = isPlay;
+        node.isPlaySpr = !!isPlay;
+    },
+
+    deckOn (p) {
+        let card = p.in(...hjm._deck_pool.pool);
+        if (card) {
+            return this.deckTouchShowCardData(card);
+        }
+
+        let button = p.in(...this._deck_playButtonArr);
+        if (button) {
+            node = button.parent;
+            this.deckTouchShowCardData(node, !this._deck_tab[node.name]);
+        }
+    },
+
+    deckLeave (end) {
+        dyl.arr([hjm._cardDataLab, hjm._choose_spr, hjm._deck_list], false);
+        dyl.arr([...hjm._deck_pool.pool], "del");
+        end();
     },
 
     copySpr (node1, node2) {

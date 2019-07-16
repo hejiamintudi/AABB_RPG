@@ -6,6 +6,9 @@ let Dir = cc.Enum({
 })
 cc.Class({
     extends: cc.Component,
+    editor: {
+        menu: "dyl/列表",
+    },
     properties: {
     	dir: {
     		default: Dir.up,
