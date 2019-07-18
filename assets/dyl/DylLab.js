@@ -203,6 +203,7 @@ cc.Class({
                 if (typeof data === "boolean") {
                     for (let i = 0; i < dataArr.length; i++) {
                         let node = dataArr[i];
+                        // cc.log("boolean", node.name, data);
                         node.active = data;
                     }
                     return;
@@ -286,6 +287,7 @@ cc.Class({
                 }
             }
         })
+        // cc.log("dylLab", name, value);
         if (value !== undefined) {
             this.node[name] = value;
         }  

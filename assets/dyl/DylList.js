@@ -153,6 +153,7 @@ cc.Class({
 
     	let preP = 0; 
     	let nextP = 0;
+
     	this.node.on("touchstart", function (event) {
     		let p = event.getLocation();
     		if (self.runFun) {
@@ -178,17 +179,28 @@ cc.Class({
     		}
     	});
 
+        let pIsInNode = function (p, node) {
+            p = node.convertToNodeSpace(p);
+            return ((p.x >= 0) && (p.x <= node.width) && (p.y >= 0) && (p.y <= node.height));
+        }
+
     	let touchEndFun = function (event) {
     		let p = event.getLocation();
     		if (!isMove) { // 触摸点击
     			if (self.buttonFun) {
     				for (let i = self.nodeArr.length - 1; i >= 0; i--) {
-    					let rect = self.nodeArr[i].getBoundingBoxToWorld();
-    					if (rect.contains(p)) {
-    						let node = self.nodeArr[i];
-    						self.buttonFun(node.dylListId, node);
-		                    return;
-		                }
+                        if (pIsInNode(p, self.nodeArr[i])) {
+                            let node = self.nodeArr[i];
+                            self.buttonFun(node.dylListId, node);
+                            return;
+                        }
+
+    					// let rect = self.nodeArr[i].getBoundingBoxToWorld();
+    					// if (rect.contains(p)) {
+    					// 	let node = self.nodeArr[i];
+    					// 	self.buttonFun(node.dylListId, node);
+		       //              return;
+		       //          }
     				}
     			}
     			return;

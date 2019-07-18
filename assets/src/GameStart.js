@@ -18,6 +18,8 @@ cc.Class({
     },
 
     initAi () {
+        ai.zxp = this;
+
         dyl.setRand(1);
         let tabToNameArr = function (data) {
             var nameArr = [];
@@ -343,10 +345,11 @@ cc.Class({
     },
 
     tipFun (str) {
+        cc.warn("tipFun");
         hjm._tip_lab = [true];
-        let id = ++hjm._tipId;
+        let id = ++this._tipId;
         setTimeout(()=>{
-            if (id === hjm._tipId) {
+            if (id === this._tipId) {
                 hjm._tip_lab = [false];
             }
         }, 1000);
@@ -373,24 +376,25 @@ cc.Class({
         let pool = []; // 出场展示
         let tab = {}; // 是否出场 name: bool
         this._deck_tab = tab;
-        // tab node.name pool
+        
         for (let i = 0; i < deck.length; i++) {
             let name = deck[i];
             tab[name] = true;
-            let node = hjm._deck_pool.add();
-            node.name = name;
-            hjm[name] = node.card;
-            pool.push(node);
+            // let node = hjm._deck_pool.add();
+            // node.name = name;
+            // hjm[name] = node.card;
+            // pool.push(node);
         }
-        // this._deck_playButtonArr = [...pool];
 
         let oriNode = null;
 
         let initFun = (i, node)=>{
-            this._deck_playButtonArr.push(node.button);
+            this._deck_playButtonArr.push(node.button); 
 
-            let name = node.name;
+            let name = hjm.deck[i];
+            node.name = name;
             hjm[name] = node.card;
+            // cc.log("tab", name, tab[name]);
             this.deckPlayButton(node, !!tab[name]);
             if (i === 0) {
                 oriNode = node;
@@ -399,11 +403,13 @@ cc.Class({
 
         let touchCardFun = ((i, node)=>this.deckTouchShowCardData(node));
         
-        hjm._deck_list.add(initFun, touchCardFun, 5);
+        hjm._deck_list = [true];
+        hjm._deck_list.add(initFun, touchCardFun, hjm.deck.length);
 
-        this.deckResetPoolArr();
+        // this.deckResetPoolArr();
+
         // _cardDataLab pool _deck_list, choose
-        tz([[hjm._cardDataLab, hjm._deck_list], true])
+        tz([[hjm._cardDataLab], true])
             // .to(pool, [this._delayTime, cc.v2(160, 0)], this._moveTime, cc.v2(-600, true))
             ([hjm._choose_spr, true])(()=>touchCardFun(0, oriNode))();
     },
@@ -414,29 +420,40 @@ cc.Class({
     },
 
     deckResetPoolArr () {
-        let arr = [...hjm._deck_pool.pool];
-        tz().to(pool, [cc.v2(160, 0)], 0, cc.v2(-600, true))();
+        cc.log("周学平");
+        let poolArr = [...hjm._deck_pool.pool];
+        // tz().to(poolArr, [cc.v2(160, 0)], 0, cc.v2(-600, true))();
+        dyl.arr(poolArr, (i, node)=>{
+            node.x = i * 160 - 600;
+        })
     },
 
     deckPlayButton (node, isPlay) {
-        let pool = hjm._deck_pool.pool;
+        cc.log("deckPlayButton", node.name, isPlay);
+        let poolArr = hjm._deck_pool.pool;
         let name = node.name;
         if (isPlay) { // 点击了，
             // 达到了最大的出场数，不能再出场了
-            if (pool.length >= this._deck_maxPlayDeckNum) { 
+            if (poolArr.length >= this._deck_maxPlayDeckNum) { 
                 return this.tipFun("超出了手牌上限");
             }
+            cc.log("喜欢曾棠", name);
             hjm.deck.push(name);
             let newNode = hjm._deck_pool.add();
             hjm[name] = newNode.card;
+            newNode.name = name;
         }
         else {
+            cc.log("喜欢谭珍", name);
             let id = dyl.get(hjm.deck, "name");
             dyl.set(hjm.deck, id);
-            node.del();
+            let i = dyl.get(poolArr, "name", name);
+            cc.log(i, name, poolArr);
+            poolArr[i].del();
         }
         this.deckResetPoolArr();
         this._deck_tab[name] = isPlay;
+        // cc.log("deckPlayButton", node.name, node.isPlaySpr, isPlay);
         node.isPlaySpr = !!isPlay;
     },
 
@@ -448,8 +465,9 @@ cc.Class({
 
         let button = p.in(...this._deck_playButtonArr);
         if (button) {
-            node = button.parent;
-            this.deckTouchShowCardData(node, !this._deck_tab[node.name]);
+            // cc.log("bbbbbbbbbbbbbutton");
+            let node = button.parent;
+            this.deckPlayButton(node, !this._deck_tab[node.name]);
         }
     },
 
