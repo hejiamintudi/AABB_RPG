@@ -379,11 +379,16 @@ cc.Class({
         
         for (let i = 0; i < deck.length; i++) {
             let name = deck[i];
+            tab[name] = false;
+        }
+
+        for (let i = 0; i < playDeck.length; i++) {
+            let name = playDeck[i];
+            let node = hjm._deck_pool.add();
+            node.name = name;
+            hjm[name] = node.card;
+            pool.push(node);
             tab[name] = true;
-            // let node = hjm._deck_pool.add();
-            // node.name = name;
-            // hjm[name] = node.card;
-            // pool.push(node);
         }
 
         let oriNode = null;
@@ -395,7 +400,8 @@ cc.Class({
             node.name = name;
             hjm[name] = node.card;
             // cc.log("tab", name, tab[name]);
-            this.deckPlayButton(node, !!tab[name]);
+            // this.deckPlayButton(node, !!tab[name]);
+            node.isPlaySpr = !!tab[name];
             if (i === 0) {
                 oriNode = node;
             }
@@ -406,7 +412,7 @@ cc.Class({
         hjm._deck_list = [true];
         hjm._deck_list.add(initFun, touchCardFun, hjm.deck.length);
 
-        // this.deckResetPoolArr();
+        this.deckResetPoolArr();
 
         // _cardDataLab pool _deck_list, choose
         tz([[hjm._cardDataLab], true])
