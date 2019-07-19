@@ -96,23 +96,45 @@ cc.Class({
         this._tipId = 0; // 识别tip，防止出现显示隐藏的bug
     },
 
-    changeEvent (e1, e2) {
+    changeEvent (e1, e2, isEnd = false) { // isEnd 结束事件是否完结不会再遇到
         let arr = [];
-        if (e1) {
-            arr.push(e1 + "Leave");
-        }
-        if (e2) {
+        if (!e1 && e2) {
             this.node.touch = e2;
-            arr.push(e2 + "Come");
+            return this[e2 + "Come"](()=>null, isEnd);
         }
-        dyl.process(this, arr);
+        else if (e1 && !e2) {
+            cc.log("没有后续内容了")
+            return this[e1 + "Leave"](()=>null, isEnd);
+        }
+        else if (e1 && e2) {
+            let endFun = ()=>{
+                this.node.touch = e2;
+                return this[e2 + "Come"](()=>null, isEnd);
+            }
+            return this[e1 + "Leave"](endFun, isEnd);
+        }
+        else {
+            cc.log("没有离开事件，也没有加入事件");
+        }
+        // if (e1) {
+        //     arr.push(e1 + "Leave");
+        // }
+        // if (e2) {
+        //     this.node.touch = e2;
+        //     arr.push(e2 + "Come");
+        // }
+        // dyl.process(this, arr);
+    },
+
+    nullFun (end) {
+        end();
     },
 
     next () { // 下一个状态
         let e1 = this._nowEvent;
         let e2 = this._nowEvent = ai.eventArr[++hjm.newEventId];
         // cc.log("next", e1, "...", e2, "||||");
-        this.changeEvent(e1, e2);
+        this.changeEvent(e1, e2, true);
     },
 
     getMainButtonArr () {
@@ -146,6 +168,7 @@ cc.Class({
 // data = arr [0: lab显示的字符串， ...(回复，回复后的显示和奖励)]
 // 奖励 str num
     talkCome (end) {
+        hjm._buttonLab.deckButton = [false];
         let name = ai.newTalkNameArr[++hjm.newTalkId];
         let dataArr = dylTalkData[name];
         let pool = hjm._talk_pool;
@@ -190,6 +213,7 @@ cc.Class({
     },
 
     talkLeave (end) {
+        hjm._buttonLab.deckButton = [true];
         hjm._buttonLab.nextButton = false;
         let pool = [...hjm._talk_pool.pool];
         tz()._to(hjm._talk_lab, this._moveTime, cc.v2(0, 1500))
@@ -287,16 +311,20 @@ cc.Class({
     },
 
     talk1End (p) {
-        hjm._cardDataLab = [false];
+        hjm._cardDataLab = [false]; 
     },
 
 ////////////// shop
     shopCome (end) {
+        let newCardId = hjm.newCardId;
         for (let i = 0; i < 3; i++) {
-            let name = ai.newCardNameArr[++hjm.newCardId];
-            let node = hjm._shop_pool.add();
+            // hjm.newCardId++;
+            let name = ai.newCardNameArr[++newCardId];
+            // cc.log(i, name, hjm.newCardId, ai.newCardNameArr);
+            let node = hjm._shop_pool.add(name);
             hjm[name] = node.card;
-            node.name = name;
+            // node.name = name;
+            // cc.log(dyl.data("card." + name));
             let coin = dyl.data("card." + name).coin// 价格
             node.button.add("deck." + name, coin);
         }
@@ -320,20 +348,27 @@ cc.Class({
         
     },
 // pool cardDataLab-bg1 nextButton  shop_choose
-    shopLeave (end) {
+    shopLeave (end, isEnd) {
+        if (isEnd) {
+            hjm.newCardId += 3; // 存档
+        }
         hjm._choose_spr = [false];
         hjm._cardDataLab.bg1 = true;
         hjm._cardDataLab = [false];
         let pool = [...hjm._shop_pool.pool];
         tz()._by(pool, [this._delayTime], this._moveTime, cc.v2(-1500, 0))
             ._to(hjm._buttonLab.nextButton, this._moveTime, [0, 0])
-            ([hjm._buttonLab.nextButton, false])(end)();
+            ([hjm._buttonLab.nextButton, false])
+            (()=>{
+                dyl.arr(pool, "del");
+            })
+            (end)();
     },
 
     shopChoose (node) {
         this.showCardData(node, node.name);
-        cc.log("shop_choose", node.x, node.y, node);
-        hjm._choose_spr = [cc.v2(node.x, true)];
+        // cc.log("shop_choose", node.x, node.y, node);
+        hjm._choose_spr = [cc.v2(node.x, -229)];
     },
 
     shopOn (p) {
@@ -410,6 +445,7 @@ cc.Class({
         let touchCardFun = ((i, node)=>this.deckTouchShowCardData(node));
         
         hjm._deck_list = [true];
+        hjm._cardDataLab.bg1 = false;
         hjm._deck_list.add(initFun, touchCardFun, hjm.deck.length);
 
         this.deckResetPoolArr();
