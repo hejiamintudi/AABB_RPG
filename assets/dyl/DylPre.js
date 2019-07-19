@@ -1508,7 +1508,8 @@ window.initDylFun = function (cryptoJS) {
 // 函数返回值：上面的参数类型； null：删除当前节点； 节点数组 / 节点：替代当前节点
     dyl.arr = function (nodeArr, ...arr) {
         var tab = {
-            funArr: []
+            funArr: [],
+            funStrArr: [] // [name, [arg]]
         };
 
         var i = 0;
@@ -1546,6 +1547,14 @@ window.initDylFun = function (cryptoJS) {
             else if (typeof value === "function") {
                 tab.funArr.push(value);
             }
+            else if (typeof value === "string") {
+                if (Array.isArray(arr[i + 1])) {
+                    tab.funStrArr.push([value, arr[++i]]);
+                }
+                else {
+                    tab.funStrArr.push([value, []]);
+                }
+            }
             else if (typeof value === "object") {
                 for (let id in value) {
                     tab[id] = value[id];
@@ -1561,6 +1570,11 @@ window.initDylFun = function (cryptoJS) {
     // 遇到删除，或者替代操作，那就不应该进行下面的赋值操作; 替代删除只能进行一次
             // var isContinue = false; 
             var isDel = false;
+            
+            for (var j = 0; j < tab.funStrArr.length; j++) {
+                cc.log(tab.funStrArr[j][0], tab.funStrArr[j][1]);
+                node[tab.funStrArr[j][0]].apply(node, tab.funStrArr[j][1]);
+            }
             for (var j = 0; j < tab.funArr.length; j++) {
                 var value = tab.funArr[j](i, nodeArr[i]);
                 var className = null;
@@ -1650,6 +1664,7 @@ window.initDylFun = function (cryptoJS) {
                     cc.error("dyl.arr 000 这个参数类型没有考虑过", value);
                 }
             }
+
 
             if (isDel) {
                 i--;

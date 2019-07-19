@@ -89,7 +89,7 @@ cc.Class({
 
     initVar () {
         this._nowEvent = "main"; // 当前事件是空
-        this._saveTouchState = null; // 当进入卡库的时候，暂时保存touch状态
+        // this._saveTouchState = null; // 当进入卡库的时候，暂时保存touch状态
         this._deck_playButtonArr = [];
         this._deck_maxPlayDeckNum = 2; // 最大的出场手牌种数
         this._deck_tab = {}; // name: bool 用来判断这个卡牌是否出场
@@ -358,13 +358,13 @@ cc.Class({
     deckButton () {
         // 退出卡库状态
         if (this.node.touch === "deck") {
-            this.node.touch = this._saveTouchState;
-            this.changeEvent("deck", this._saveTouchState);
+            this.node.touch = this._nowEvent;
+            this.changeEvent("deck", this._nowEvent);
             hjm.playDeck = hjm.playDeck;
         }
         else { // 进入卡库状态
             this._deck_playButtonArr = [];
-            this._saveTouchState = this._nowEvent;
+            // this._saveTouchState = this._nowEvent;
             this.changeEvent(this._nowEvent, "deck");
         }
     },
@@ -384,8 +384,8 @@ cc.Class({
 
         for (let i = 0; i < playDeck.length; i++) {
             let name = playDeck[i];
-            let node = hjm._deck_pool.add();
-            node.name = name;
+            let node = hjm._deck_pool.add(name);
+            // node.name = name;
             hjm[name] = node.card;
             pool.push(node);
             tab[name] = true;
@@ -479,6 +479,8 @@ cc.Class({
 
     deckLeave (end) {
         dyl.arr([hjm._cardDataLab, hjm._choose_spr, hjm._deck_list], false);
+        cc.log(...hjm._deck_pool.pool);
+        cc.周学平 = [...hjm._deck_pool.pool];
         dyl.arr([...hjm._deck_pool.pool], "del");
         end();
     },

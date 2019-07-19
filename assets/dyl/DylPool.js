@@ -184,15 +184,38 @@ cc.Class({
         // cc.ppp = delPool;
         delPool.push(node);
         // cc.kk = node;
-        node.del = function () {
-            // cc.log("del");
-            this.active = false;
-            delPool.push(this);
-            let id = this.__poolId;
-            pool[id] = pool[pool.length - 1];
-            pool[id].__poolId = id;
-            pool.length = pool.length - 1;
-            this.__poolId = null;
+
+        if (this.isEffect) {
+            node.del = function () {
+                // cc.log("del");
+                this.active = false;
+                delPool.push(this);
+                let id = this.__poolId;
+                pool[id] = pool[pool.length - 1];
+                pool[id].__poolId = id;
+                pool.length = pool.length - 1;
+                this.__poolId = null;
+            }
+        }
+        else {
+            node.del = function () {
+                this.active = false;
+                delPool.push(this);
+                // let id = this.__poolId;
+                // pool[id] = pool[pool.length - 1];
+                // pool[id].__poolId = id;
+                // pool.length = pool.length - 1;
+                // this.__poolId = null;
+
+                let id = pool.indexOf(this);
+                if (id === -1) { // 节点已经不在pool里了
+                    return cc.error("这个节点已经被删除了，不能再删除", this.name, id, pool, this);
+                }
+                pool.splice(id, 1); //替换  （startId, howMany, ...otherArr）
+                if (pool[this.name] === this) {
+                    pool[this.name] = null;
+                }
+            }
         }
 
         let self = this;
@@ -255,12 +278,12 @@ cc.Class({
             }
         }
         else {
-            let addFun = ()=>null;
-            this.node.add = function (...argArr) {
-                if (typeof argArr[0] === "function") {
-                    addFun = argArr[0];
-                    return;
-                }
+            // let addFun = ()=>null;
+            this.node.add = function (nodeName) {
+                // if (typeof argArr[0] === "function") {
+                //     addFun = argArr[0];
+                //     return;
+                // }
 
                 // cc.log("addd");
                 let node = null;
@@ -273,11 +296,20 @@ cc.Class({
                     node.del = function () {
                         this.active = false;
                         delPool.push(this);
-                        let id = this.__poolId;
-                        pool[id] = pool[pool.length - 1];
-                        pool[id].__poolId = id;
-                        pool.length = pool.length - 1;
-                        this.__poolId = null;
+                        // let id = this.__poolId;
+                        // pool[id] = pool[pool.length - 1];
+                        // pool[id].__poolId = id;
+                        // pool.length = pool.length - 1;
+                        // this.__poolId = null;
+
+                        let id = pool.indexOf(this);
+                        if (id === -1) { // 节点已经不在pool里了
+                            return cc.error("这个节点已经被删除了，不能再删除", this.name, id, pool, this);
+                        }
+                        pool.splice(id, 1); //替换  （startId, howMany, ...otherArr）
+                        if (pool[this.name] === this) {
+                            pool[this.name] = null;
+                        }
                     }
                 }
                 else {
@@ -286,10 +318,13 @@ cc.Class({
                     delPool.length = delPool.length - 1;
                     node.active = true;
                 }
-                node.__poolId = pool.length;
+                // node.__poolId = pool.length;
                 pool.push(node);
-                addFun(node, ...argArr);
-                // cc.log("成功添加");
+                // addFun(node, ...argArr);
+                if (nodeName !== undefined) {
+                    node.name = nodeName;
+                    pool[name] = node;
+                }
                 return node;
             }
         }
