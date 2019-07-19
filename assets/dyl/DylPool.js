@@ -322,8 +322,9 @@ cc.Class({
                 pool.push(node);
                 // addFun(node, ...argArr);
                 if (nodeName !== undefined) {
+                    // cc.log("name", nodeName, pool[nodeName]);
                     node.name = nodeName;
-                    pool[name] = node;
+                    pool[nodeName] = node;
                 }
                 return node;
             }

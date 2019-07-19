@@ -92,7 +92,7 @@ cc.Class({
         // this._saveTouchState = null; // 当进入卡库的时候，暂时保存touch状态
         this._deck_playButtonArr = [];
         this._deck_maxPlayDeckNum = 2; // 最大的出场手牌种数
-        this._deck_tab = {}; // name: bool 用来判断这个卡牌是否出场
+        // this._deck_tab = {}; // name: bool 用来判断这个卡牌是否出场
         this._tipId = 0; // 识别tip，防止出现显示隐藏的bug
     },
 
@@ -373,22 +373,22 @@ cc.Class({
     deckCome (end) {
         let playDeck = hjm.playDeck;
         let deck = hjm.deck;
-        let pool = []; // 出场展示
-        let tab = {}; // 是否出场 name: bool
-        this._deck_tab = tab;
+        // let pool = []; // 出场展示
+        // let tab = {}; // 是否出场 name: bool
+        // this._deck_tab = tab;
         
-        for (let i = 0; i < deck.length; i++) {
-            let name = deck[i];
-            tab[name] = false;
-        }
-
+        // for (let i = 0; i < deck.length; i++) {
+        //     let name = deck[i];
+        //     tab[name] = false;
+        // }
+        let pool = hjm._deck_pool.pool;
         for (let i = 0; i < playDeck.length; i++) {
             let name = playDeck[i];
             let node = hjm._deck_pool.add(name);
             // node.name = name;
             hjm[name] = node.card;
-            pool.push(node);
-            tab[name] = true;
+            // pool.push(node);
+            // tab[name] = true;
         }
 
         let oriNode = null;
@@ -401,7 +401,7 @@ cc.Class({
             hjm[name] = node.card;
             // cc.log("tab", name, tab[name]);
             // this.deckPlayButton(node, !!tab[name]);
-            node.isPlaySpr = !!tab[name];
+            node.isPlaySpr = !!pool[name];
             if (i === 0) {
                 oriNode = node;
             }
@@ -426,7 +426,6 @@ cc.Class({
     },
 
     deckResetPoolArr () {
-        cc.log("周学平");
         let poolArr = [...hjm._deck_pool.pool];
         // tz().to(poolArr, [cc.v2(160, 0)], 0, cc.v2(-600, true))();
         dyl.arr(poolArr, (i, node)=>{
@@ -445,9 +444,9 @@ cc.Class({
             }
             cc.log("喜欢曾棠", name);
             hjm.deck.push(name);
-            let newNode = hjm._deck_pool.add();
+            let newNode = hjm._deck_pool.add(name);
             hjm[name] = newNode.card;
-            newNode.name = name;
+            // newNode.name = name;
         }
         else {
             cc.log("喜欢谭珍", name);
@@ -458,7 +457,7 @@ cc.Class({
             poolArr[i].del();
         }
         this.deckResetPoolArr();
-        this._deck_tab[name] = isPlay;
+        // this._deck_tab[name] = isPlay;
         // cc.log("deckPlayButton", node.name, node.isPlaySpr, isPlay);
         node.isPlaySpr = !!isPlay;
     },
@@ -473,14 +472,14 @@ cc.Class({
         if (button) {
             // cc.log("bbbbbbbbbbbbbutton");
             let node = button.parent;
-            this.deckPlayButton(node, !this._deck_tab[node.name]);
+            // this.deckPlayButton(node, !this._deck_tab[node.name]);
+            this.deckPlayButton(node, !hjm._deck_pool.pool[node.name]);
         }
     },
 
     deckLeave (end) {
         dyl.arr([hjm._cardDataLab, hjm._choose_spr, hjm._deck_list], false);
         cc.log(...hjm._deck_pool.pool);
-        cc.周学平 = [...hjm._deck_pool.pool];
         dyl.arr([...hjm._deck_pool.pool], "del");
         end();
     },
