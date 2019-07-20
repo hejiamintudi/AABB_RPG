@@ -79,12 +79,13 @@ cc.Class({
             return eventArr;
         }
 
-        ai._allEnNameArr = dylDataIdToArr("en");
+        // ai._allEnNameArr = dylDataIdToArr("en");
+        ai._allEnNameArr = ["en1", "en1", "en1", "en1", "en1", "en1"]; // 函数全在脚本里，这个没有表格
         ai._allTalkNameArr = tabToNameArr(dylTalkData);
         ai.newCardNameArr = getNewArr(ai._maxCardNum, ai._allCardNameArr); // 新卡将会按顺序从这个数组里面开始获取，暂时直接用_maxCardNum，以后是直接根据动态生成这个数量
         ai.newEnNameArr = getNewArr(ai._maxEnNum,  ai._allEnNameArr);
         ai.newTalkNameArr = getNewArr(ai._maxTalkNum, ai._allTalkNameArr);
-        ai.eventArr = getEventArr(["talk", 2, "shop", 1]);
+        ai.eventArr = getEventArr(["talk", 1, "shop", 1, "en", ai._maxEnNum]);
     },
 
     initVar () {
@@ -169,7 +170,7 @@ cc.Class({
 // 奖励 str num
     talkCome (end) {
         hjm._buttonLab.deckButton = [false];
-        let name = ai.newTalkNameArr[++hjm.newTalkId];
+        let name = ai.newTalkNameArr[hjm.newTalkId + 1];
         let dataArr = dylTalkData[name];
         let pool = hjm._talk_pool;
         let lab = hjm._talk_lab;
@@ -228,7 +229,7 @@ cc.Class({
         if (!node) {
             return;
         }
-
+        hjm.newTalkId++;
         let data = node.data; // replay: 点击后的回复显示， 其他是： 奖励名：数量
 
         if (data.replay === "") {
@@ -647,6 +648,29 @@ cc.Class({
             this.next();
         }
     },
+
+    // enButton () { // 进入战斗画面
+
+    // },
+
+    enCome (end) {
+        let name = ai.newEnNameArr[hjm.newEnId + 1];
+        cc.loader.loadRes("en/" + name + "/attack", cc.SpriteAtlas, function (err, atlas) {
+            if (err) {
+                cc.error(err);
+            }
+            let spriteFrame = atlas.getSpriteFrame("0");
+            hjm._en_lab.en.getComponent(cc.Sprite).spriteFrame = spriteFrame;
+        });
+        hjm._en_lab = [true, [0], [0.2, 0.2]];
+        hjm._en_button = [true, [0.2, 0.2]];
+        tz()._to(hjm._en_lab, this._moveTime, [720], [1, 1])
+            ._to(hjm._en_button, this._moveTime, [1, 1])
+            (end)();
+    },
+
+    // enLeave (end) {
+    // },
 
     newGameMainButton () {
         cc.log("newGameMainButton");

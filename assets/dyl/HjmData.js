@@ -87,7 +87,7 @@ window.initHjmDataFun = function () {
 
 	// ai._allEnNameArr = funTab.dylDataIdToArr("en");
 	ai._allEnNameArr = [];
-	ai._maxEnNum = 0;
+	ai._maxEnNum = 3;
 	ai.newEnNameArr = [];
 	
 
