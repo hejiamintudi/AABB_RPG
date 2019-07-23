@@ -28,10 +28,10 @@ window.initHjmDataFun = function () {
 
 	hjm.hp = function (newValue, oldValue, labArr) {
 		if (newValue > hjm.maxHp) {
-			newValue = hjm.maxHp;
+			hjm.hp = hjm.maxHp;
 		}
 		else if (newValue < 0) {
-			newValue = 0;
+			hjm.hp = 0;
 		}
 		else {
 			var timeFun = function (node) {

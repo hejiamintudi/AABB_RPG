@@ -3,7 +3,15 @@ cc.Class({
     properties: {
     },
 
+    debugFun () {
+        // hjm.newEventId = (newVal, oldVal)=>{
+        //     cc.warn("newEventId", newVal);
+        // }
+    },
+
     start () {
+        this.debugFun();
+
         this._delayTime = 0.1;
         this._moveTime = 0.3;
         // this.replyArr = [];
@@ -85,7 +93,7 @@ cc.Class({
         ai.newCardNameArr = getNewArr(ai._maxCardNum, ai._allCardNameArr); // 新卡将会按顺序从这个数组里面开始获取，暂时直接用_maxCardNum，以后是直接根据动态生成这个数量
         ai.newEnNameArr = getNewArr(ai._maxEnNum,  ai._allEnNameArr);
         ai.newTalkNameArr = getNewArr(ai._maxTalkNum, ai._allTalkNameArr);
-        ai.eventArr = getEventArr(["talk", 1, "shop", 1, "en", ai._maxEnNum]);
+        ai.eventArr = getEventArr(["talk", 3, "shop", 1, "en", ai._maxEnNum]);
     },
 
     initVar () {
@@ -98,6 +106,7 @@ cc.Class({
     },
 
     changeEvent (e1, e2, isEnd = false) { // isEnd 结束事件是否完结不会再遇到
+        // cc.warn("changeEvent", e1, e2, isEnd);
         let arr = [];
         if (!e1 && e2) {
             this.node.touch = e2;
@@ -133,7 +142,7 @@ cc.Class({
 
     next () { // 下一个状态
         let e1 = this._nowEvent;
-        let e2 = this._nowEvent = ai.eventArr[++hjm.newEventId];
+        let e2 = this._nowEvent = ai.eventArr[hjm.newEventId + 1];
         // cc.log("next", e1, "...", e2, "||||");
         this.changeEvent(e1, e2, true);
     },
@@ -142,6 +151,9 @@ cc.Class({
         let mainButtonArr = [];
         if (hjm.newEventId > -1) { // 没有存档，就是少了一个button
             mainButtonArr.push(hjm._buttonLab.continueGameMainButton);
+        }
+        else if (hjm._buttonLab.continueGameMainButton.active) {
+            mainButtonArr.push(hjm._buttonLab.continueGameMainButton);    
         }
         mainButtonArr.push(hjm._buttonLab.newGameMainButton);
         return mainButtonArr;
@@ -230,6 +242,7 @@ cc.Class({
             return;
         }
         hjm.newTalkId++;
+        hjm.newEventId++;
         let data = node.data; // replay: 点击后的回复显示， 其他是： 奖励名：数量
 
         if (data.replay === "") {
@@ -320,7 +333,7 @@ cc.Class({
         let newCardId = hjm.newCardId;
         for (let i = 0; i < 3; i++) {
             // hjm.newCardId++;
-            let name = ai.newCardNameArr[++newCardId];
+            let name = ai.newCardNameArr[newCardId + i + 1];
             // cc.log(i, name, hjm.newCardId, ai.newCardNameArr);
             let node = hjm._shop_pool.add(name);
             hjm[name] = node.card;
@@ -352,6 +365,7 @@ cc.Class({
     shopLeave (end, isEnd) {
         if (isEnd) {
             hjm.newCardId += 3; // 存档
+            cc.log("shopLeave");
         }
         hjm._choose_spr = [false];
         hjm._cardDataLab.bg1 = true;
@@ -378,7 +392,7 @@ cc.Class({
             return;
         }
         this.shopChoose(node);
-    },
+    }, 
 
     tipFun (str) {
         cc.warn("tipFun");
@@ -624,6 +638,9 @@ cc.Class({
 
     nextButton () {
         cc.log("nextButton");
+        if (this._nowEvent !== "talk") {
+            hjm.newEventId++;
+        }
         let e = this._nowEvent;
         if (e === "talk") {
             let nodeArr = [hjm._buttonLab.nextButton, ...hjm._talk_rewardLab.getChildren()];

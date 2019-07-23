@@ -67,7 +67,11 @@ cc.Class({
             default: "",
             displayName: "物品路径（.隔开）"
         },
-        hasSetBuy: false
+        hasSetBuy: false,
+        isAutoSave: {
+            default: false,
+            displayName: "是否要自动保存"
+        },
     },
 
     __preload: function () {
@@ -194,24 +198,15 @@ cc.Class({
         }
         this.dyl_hasBuyNode = this.node.getChildByName("hasBuy");
 
-        let toolPool = _hjm;
+        // let toolPool = _hjm;
         let arr = this.toolName.split(".");
-        for (let i = 0; i < arr.length - 1; i++) {
-            toolPool = toolPool[arr[i]];
-        }
-        let id = arr[arr.length - 1];
-        // cc.log(toolPool, id);
-        // 数组类型， 只能卖一个
-        if (Array.isArray(toolPool)) {
-            let toolArr = toolPool;
-            this.dyl_isCanBuy = function () {
-                return (toolArr.indexOf(id) < 0);
-            }
-            this.dyl_buy = function () {
-                toolArr.push(id);
-                hjm[this.coinName] -= this.coin;
-            }
-        } else if (toolPool === _hjm) {
+        // for (let i = 0; i < arr.length - 1; i++) {
+        //     toolPool = toolPool[arr[i]];
+        // }
+        // let id = arr[arr.length - 1];
+
+        if (arr.length === 1) { // 直接hjm.id类型
+            let id = arr[0];
             if (typeof hjm[id] === "number") {
                 this.dyl_isCanBuy = function () {
                     return true;
@@ -231,47 +226,151 @@ cc.Class({
                 }
             }
         }
-        else {
-            let isOnly = null; // 是否唯一.true 是， false 不是， null 代表出错
-            for (let i in toolPool) {
-                if (typeof toolPool[i] === "number") {
-                    isOnly = false;
-                }
-                else {
-                    isOnly = true;
-                }
-                break;
-            }
-            if (isOnly === null) {
-                return cc.warn("DylButton", this.toolName, "这是一个空对象，不知道到底是不是唯一物品");
-            }
-
-            // 也就是bool类型
-            if (isOnly) {
+        else if (arr.length === 2){
+            let [name, id] = arr;
+            if (Array.isArray(hjm[name])) {
                 this.dyl_isCanBuy = function () {
-                    return !toolPool[id];
+                    return (hjm[name].indexOf(id) < 0);
                 }
                 this.dyl_buy = function () {
-                    toolPool[id] = true;
+                    hjm[name].push(id);
                     hjm[this.coinName] -= this.coin;
-                }
+                    hjm[name] = hjm[name];
+                }     
             }
             else {
-                // 因为没有数量限制，所以买多少都无所谓
-                this.dyl_isCanBuy = function () {
-                    return true;
-                }
-                this.dyl_buy = function () {
-                    if (!toolPool[id]) {
-                        toolPool[id] = 1;
+                let isOnly = null; // 是否唯一.true 是， false 不是， null 代表出错
+                let toolPool = hjm[name];
+                for (let i in toolPool) {
+                    if (typeof toolPool[i] === "number") {
+                        isOnly = false;
                     }
                     else {
-                        toolPool[id]++;
+                        isOnly = true;
                     }
-                    hjm[this.coinName] -= this.coin;
+                    break;
+                }
+                if (isOnly === null) {
+                    return cc.warn("DylButton", this.toolName, "这是一个空对象，不知道到底是不是唯一物品");
+                }
+
+                // 也就是bool类型
+                if (isOnly) {
+                    this.dyl_isCanBuy = function () {
+                        return !toolPool[id];
+                    }
+                    this.dyl_buy = function () {
+                        toolPool[id] = true;
+                        hjm[this.coinName] -= this.coin;
+                    }
+                }
+                else {
+                    // 因为没有数量限制，所以买多少都无所谓
+                    this.dyl_isCanBuy = function () {
+                        return true;
+                    }
+                    if (_hjmIsObjTabFun(name)) {
+                        this.dyl_buy = function () {
+                            if (!toolPool[id]) {
+                                toolPool[id] = 1;
+                            }
+                            else {
+                                toolPool[id]++;
+                            }
+                            hjm[name] = hjm[name];
+                            hjm[this.coinName] -= this.coin;
+                        }
+                    }
+                    else {
+                        this.dyl_buy = function () {
+                            if (!toolPool[id]) {
+                                toolPool[id] = 1;
+                            }
+                            else {
+                                toolPool[id]++;
+                            }
+                            hjm[this.coinName] -= this.coin;
+                        }
+                    }
                 }
             }
         }
+        else {
+            return cc.error("参数应该是str或者str.str", this.toolName);
+        }
+
+        // // cc.log(toolPool, id);
+        // // 数组类型， 只能卖一个
+        // if (Array.isArray(toolPool)) { // 数组
+        //     let toolArr = toolPool;
+        //     this.dyl_isCanBuy = function () {
+        //         return (toolArr.indexOf(id) < 0);
+        //     }
+        //     this.dyl_buy = function () {
+        //         toolArr.push(id);
+        //         hjm[this.coinName] -= this.coin;
+        //     }
+        // } else if (toolPool === _hjm) { // 
+        //     if (typeof hjm[id] === "number") {
+        //         this.dyl_isCanBuy = function () {
+        //             return true;
+        //         }
+        //         this.dyl_buy = function () {
+        //             hjm[id]++;
+        //             hjm[this.coinName] -= this.coin;
+        //         }
+        //     }
+        //     else { // bool
+        //         this.dyl_isCanBuy = function () {
+        //             return !hjm[id];
+        //         }
+        //         this.dyl_buy = function () {
+        //             hjm[id] = true;
+        //             hjm[this.coinName] -= this.coin;
+        //         }
+        //     }
+        // }
+        // else {
+        //     let isOnly = null; // 是否唯一.true 是， false 不是， null 代表出错
+        //     for (let i in toolPool) {
+        //         if (typeof toolPool[i] === "number") {
+        //             isOnly = false;
+        //         }
+        //         else {
+        //             isOnly = true;
+        //         }
+        //         break;
+        //     }
+        //     if (isOnly === null) {
+        //         return cc.warn("DylButton", this.toolName, "这是一个空对象，不知道到底是不是唯一物品");
+        //     }
+
+        //     // 也就是bool类型
+        //     if (isOnly) {
+        //         this.dyl_isCanBuy = function () {
+        //             return !toolPool[id];
+        //         }
+        //         this.dyl_buy = function () {
+        //             toolPool[id] = true;
+        //             hjm[this.coinName] -= this.coin;
+        //         }
+        //     }
+        //     else {
+        //         // 因为没有数量限制，所以买多少都无所谓
+        //         this.dyl_isCanBuy = function () {
+        //             return true;
+        //         }
+        //         this.dyl_buy = function () {
+        //             if (!toolPool[id]) {
+        //                 toolPool[id] = 1;
+        //             }
+        //             else {
+        //                 toolPool[id]++;
+        //             }
+        //             hjm[this.coinName] -= this.coin;
+        //         }
+        //     }
+        // }
 
         if (this.dyl_updateBuy) {
             _hjmDelArrFun(this.coinName, this.dyl_updateBuy);

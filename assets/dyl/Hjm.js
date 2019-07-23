@@ -21,7 +21,8 @@ window.hjm = null;
 ///////////////.... 
     var _dylDefaultTab = {}; // name: value
     var _dylDefaultGroup = { _dylAll: [[], [], [], []] }; // groupName: [直接赋值名字数组，对象名字数组，数组名字数组，假对象名字数组]
-
+    cc.tab = _dylDefaultTab;
+    cc.group = _dylDefaultGroup;
 
     var _dylCopyArrFun = function (arr) {
         var newArr = [];
@@ -241,7 +242,8 @@ window.hjm = null;
                     objTab[name] = data;
 
 
-                    _dylDefaultTab[name] = _dylCopyTabFun(data);
+                    // _dylDefaultTab[name] = _dylCopyTabFun(data);
+                    _dylDefaultTab[name] = _dylCopyTabFun(defaultValue);
                     if (groupName === undefined) {
                         _dylPushDefaultToGroupFun("_dylAll", name, 1);
                     }
@@ -257,7 +259,8 @@ window.hjm = null;
                     }
                     arrTab[name] = data;    
 
-                    _dylDefaultTab[name] = _dylCopyArrFun(data);
+                    // _dylDefaultTab[name] = _dylCopyArrFun(data);
+                    _dylDefaultTab[name] = _dylCopyArrFun(defaultValue);
                     if (groupName === undefined) {
                         _dylPushDefaultToGroupFun("_dylAll", name, 2);
                     }
@@ -699,6 +702,10 @@ window.hjm = null;
         }
         tab[name].funArr.splice(index, 1);
     };
+
+    window._hjmIsObjTabFun = function (name) {
+        return !!objTab[name];
+    }
 })();
 
 

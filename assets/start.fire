@@ -41,8 +41,8 @@
     },
     "_scale": {
       "__type__": "cc.Vec3",
-      "x": 0.4510561342592593,
-      "y": 0.4510561342592593,
+      "x": 0.44989872685185184,
+      "y": 0.44989872685185184,
       "z": 1
     },
     "_quat": {
@@ -2738,6 +2738,7 @@
     "coinName": "coin",
     "toolName": "",
     "hasSetBuy": true,
+    "isAutoSave": false,
     "_N$sceneType": "Buy",
     "_id": "1dvzskmA5Dh42RdR7YWQ/B"
   },
@@ -4380,6 +4381,7 @@
     "coinName": "coin",
     "toolName": "",
     "hasSetBuy": false,
+    "isAutoSave": false,
     "_N$sceneType": "NextScene",
     "_id": "012X/z1DxLU5Nk0Dsn1XpV"
   },
@@ -8773,6 +8775,7 @@
     "coinName": "coin",
     "toolName": "",
     "hasSetBuy": true,
+    "isAutoSave": false,
     "_N$sceneType": "Buy",
     "_id": "c2ok2neBZO3qj1Wikky/KJ"
   },
