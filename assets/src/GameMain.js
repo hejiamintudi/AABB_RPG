@@ -37,7 +37,7 @@ cc.Class({
                         "myCheckNotCard_2",
                 "myEndTurn", // 我方结束回合后 
 
-                "enAddMainDmg", "enPreAttackAct", 
+                "enPreTurn", "enAddMainDmg", "enPreAttackAct", 
                     4, "enAttack_4", 
                         "enEndAttack", "enAddBuff", "enResetHurtAct", "checkDie",
                 "enEndTurn",  
@@ -108,6 +108,12 @@ cc.Class({
     myPreTurn (end) {
         hjm._hero.def = 0;
         this.runBuffArr(end, hjm._hero, "preTurn", null);
+        end();
+    },
+
+    enPreTurn (end) {
+        hjm._en.def = 0;
+        this.runBuffArr(end, hjm._en, "preTurn", null);
         end();
     },
 
@@ -643,6 +649,7 @@ cc.Class({
 
         // buff处理
         attackRole.atkData.myBuff.push(...myBuff);
+        // cc.log(".........", enBuff);
         attackRole.atkData.enBuff.push(...enBuff);
 
         // 特效处理
@@ -679,6 +686,7 @@ cc.Class({
 
     addBuff (end, attackRole, getHurtRole) {
         let {myBuff, enBuff} = attackRole.atkData;
+        cc.log("addBuff", enBuff);
         let Buff = this.node.getComponent("Buff");
         for (let i = 0; i < myBuff.length; i++) {
             // end(Buff, myBuff[i], attackRole, 1);
@@ -702,6 +710,7 @@ cc.Class({
             // Buff[enBuff[i]](getHurtRole);
         }
         this.updateDataShow();
+        cc.log(hjm._en.buffArr[0]);
         end();
     },
 

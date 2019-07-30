@@ -27,7 +27,12 @@ cc.Class({
     // 这个是测试技能 skillNum 都是3
     testMain (end, atkData) {
         // return this.forget(end, atkData);
-        return this.twoDmg(end, atkData);
+        return this.poison(end, atkData);
+    },
+
+    poison (end, atkData) {
+        atkData.enBuff.push(["poison", 3]);
+        end();
     },
 
     testDef (end, atkData) {

@@ -14,8 +14,8 @@ cc.Class({
     		def: dataArr[1],
             times: dataArr[2],
     		num: 1, // 能量
-            myBuff: dataArr[3],
-            enBuff: dataArr[4],
+            myBuff: this.initBuffArr(dataArr[3]),
+            enBuff: this.initBuffArr(dataArr[4]),
             type: "main",
             dmgArr: [],
             addDataArr: []
@@ -25,6 +25,20 @@ cc.Class({
     		// enBuff: this.addBuffArr([], dataArr[4])
     	};
     	return atkData;
+    },
+
+    initBuffArr (buffArr) {
+        let arr = [];
+        for (let i = 0; i < buffArr.length; i++) {
+            if (typeof buffArr[i + 1] === "number") {
+                arr.push([buffArr[i], buffArr[i + 1]]);
+                i++;
+            }
+            else {
+                arr.push(buffArr[i]);
+            }
+        }
+        return arr;
     },
 
     addBuffArr (buffArr, dataArr) {
@@ -64,6 +78,12 @@ cc.Class({
 // plan 有攻击（atk） 防守（def） 强化（add） 负面（sub） 不明（what） 逃跑（run）
 // round 是从0开始的
     en1 (en, round) {
+        // cc.log("round", round);
+        return [2, NaN, 1, [], ["poison", 3]];
+        // en.skill = fun1;
+    },
+
+    样品 (en, round) {
         // cc.log("round", round);
     	if (round === 0) {
     		return [NaN, 10, 1, ["backAtk"], []];

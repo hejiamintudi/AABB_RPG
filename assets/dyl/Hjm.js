@@ -243,7 +243,7 @@ window.hjm = null;
 
 
                     // _dylDefaultTab[name] = _dylCopyTabFun(data);
-                    _dylDefaultTab[name] = _dylCopyTabFun(defaultValue);
+                    _dylDefaultTab[name] = _dylCopyTabFun(defaultValue[0]);
                     if (groupName === undefined) {
                         _dylPushDefaultToGroupFun("_dylAll", name, 1);
                     }

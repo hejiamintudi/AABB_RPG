@@ -30,7 +30,9 @@ cc.Class({
             role: role,
             buffNode: buffNode
         }
-        buffNode.buffData = buff;
+        if (buffNode) { // 这个if是后面加的，不知道是否会有问题
+            buffNode.buffData = buff;
+        }
         if (name[0] !== "_") {
             dyl.notify(buff, "num", (newData, oldData)=>{
                 buffNode.num = newData;
@@ -102,28 +104,41 @@ cc.Class({
 
         // 这只是更新位置
         arr.resetPos = function () {
-            let id = 0;
-            for (let i = 0; i < this.length; i++) {
-                let buff = arr[i];
-                if (buff.buffNode && !buff.isDel) {
-                    buff.buffNode.x = id * 64;
-                    id++;
+            // let id = 0;
+            // for (let i = 0; i < this.length; i++) {
+            //     let buff = arr[i];
+            //     if (buff.buffNode && !buff.isDel) {
+            //         buff.buffNode.x = id * 64;
+            //         id++;
+            //     }
+            // }
+            let newArr = [...this];
+            let fun = (id, buff)=>{
+                if (buff.isDel || !buff.buffNode) {
+                    return null;
                 }
+                buff.buffNode.x = id * 64;
             }
+            dyl.arr(newArr, fun);
         }
 
         // 这是更新buff数组
         arr.resetBuff = function (end) {
-            let tmpArr = [];
-            for (let i = 0; i < this.length; i++) {
-                let buff = this[i];
-                if (!buff.isDel) {
-                    tmpArr.push(buff);
-                }
-            }   
+            // let tmpArr = [];
+            // for (let i = 0; i < this.length; i++) {
+            //     let buff = this[i];
+            //     if (!buff.isDel) {
+            //         tmpArr.push(buff);
+            //     }
+            // }   
 
-            this.length = 0;
-            this.push(...tmpArr);
+            // this.length = 0;
+            // this.push(...tmpArr);
+            dyl.arr(this, (id, buff)=>{
+                if (buff.isDel) {
+                    return null;
+                }
+            })
             end();
         }
         return arr;
@@ -323,6 +338,22 @@ cc.Class({
             attackRole.getHurt(this.num);
             return end();
         }
+    },
+
+    poison (roleNode, num = 1) {
+        let addAtkNum = 3; // 每回合增加的攻击力值
+
+        let buff = roleNode.buffArr.add("poison", num);
+        buff.state = "preTurn";
+        buff.delState = null;
+        buff.delFun = "sub";
+
+        buff.fun = function (end, atkData, buff, role) {
+            cc.log("poison", this.num);
+            role.getHurt(this.num, false, end);
+            // tz(0.2, end)();
+            // return end();
+        };
     },
 
     // forget (roleNode, num = 1) {

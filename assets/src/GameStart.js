@@ -87,8 +87,8 @@ cc.Class({
             return eventArr;
         }
 
-        // ai._allEnNameArr = dylDataIdToArr("en");
-        ai._allEnNameArr = ["en1", "en1", "en1", "en1", "en1", "en1"]; // 函数全在脚本里，这个没有表格
+        ai._allEnNameArr = dylDataIdToArr("en");
+        // ai._allEnNameArr = ["en1", "en1", "en1", "en1", "en1", "en1"]; // 函数全在脚本里，这个没有表格
         ai._allTalkNameArr = tabToNameArr(dylTalkData);
         ai.newCardNameArr = getNewArr(ai._maxCardNum, ai._allCardNameArr); // 新卡将会按顺序从这个数组里面开始获取，暂时直接用_maxCardNum，以后是直接根据动态生成这个数量
         ai.newEnNameArr = getNewArr(ai._maxEnNum,  ai._allEnNameArr);
